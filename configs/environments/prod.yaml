@@ -1,0 +1,21 @@
+environment: prod
+database:
+  url: ${DATABASE_URL}
+  poolSize: 50
+  ssl: true
+redis:
+  url: ${REDIS_URL}
+nats:
+  url: ${NATS_URL}
+gateway:
+  url: ${DAEMON_GATEWAY_URL}
+  port: 3000
+services:
+  collectSensing: ${DAEMON_INGEST_URL}
+  policyEngine: ${DAEMON_POLICY_URL}
+observability:
+  logLevel: warn
+  metrics: true
+security:
+  enforceAuth: true
+  requireTls: true

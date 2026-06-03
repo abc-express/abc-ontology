@@ -1,0 +1,22 @@
+{
+  "name": "@daemon/collect-sensing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/orchestrator/ingestion-orchestrator.js",
+  "types": "./dist/orchestrator/ingestion-orchestrator.d.ts",
+  "exports": {
+    ".": "./dist/orchestrator/ingestion-orchestrator.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test --import tsx \"**/*.test.ts\"",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@daemon/platform-types": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

@@ -1,0 +1,17 @@
+environment: staging
+database:
+  url: ${DATABASE_URL}
+  poolSize: 10
+redis:
+  url: ${REDIS_URL}
+nats:
+  url: ${NATS_URL}
+gateway:
+  url: https://staging.example.internal
+  port: 3000
+services:
+  collectSensing: ${DAEMON_INGEST_URL}
+  policyEngine: ${DAEMON_POLICY_URL}
+observability:
+  logLevel: info
+  metrics: true

@@ -1,0 +1,7 @@
+[package]
+name = "daemon-security-engine"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+daemon-policy = { path = "../../security-governance/policy" }

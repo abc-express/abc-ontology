@@ -1,0 +1,22 @@
+# Governance policies: audit, retention, and escalation rules.
+audit:
+  enabled: true
+  backend: postgres
+  retentionDays: 365
+escalation:
+  - trigger: policy_denied
+    channel: review-queue
+    severity: medium
+  - trigger: external_write
+    channel: approval-gate
+    severity: high
+retention:
+  - resource: audit-log
+    days: 365
+  - resource: commit-log
+    days: 730
+approvalGates:
+  - resource: external-system
+    approvers: 1
+  - resource: schema-change
+    approvers: 2

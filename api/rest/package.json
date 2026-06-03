@@ -1,0 +1,25 @@
+{
+  "name": "@daemon/api-rest",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/server.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "node --import tsx src/main.ts",
+    "start": "node dist/main.js",
+    "test": "node --test --import tsx src/server.test.ts",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@daemon/observability": "workspace:*",
+    "@daemon/ontology": "workspace:*",
+    "@daemon/platform-types": "workspace:*",
+    "@daemon/products": "workspace:*",
+    "@daemon/read-write-loops": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2"
+  }
+}

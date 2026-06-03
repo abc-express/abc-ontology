@@ -1,0 +1,22 @@
+{
+  "title": "Daemon API Gateway",
+  "uid": "daemon-gateway",
+  "panels": [
+    {
+      "title": "Request rate",
+      "targets": [
+        {
+          "expr": "sum(rate(daemon_http_requests_total{job=\"daemon-api-gateway\"}[5m]))"
+        }
+      ]
+    },
+    {
+      "title": "Error rate (5xx)",
+      "targets": [
+        {
+          "expr": "sum(rate(daemon_http_requests_total{job=\"daemon-api-gateway\",status=~\"5..\"}[5m]))"
+        }
+      ]
+    }
+  ]
+}

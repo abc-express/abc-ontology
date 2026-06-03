@@ -1,0 +1,23 @@
+{
+  "name": "@daemon/security-governance",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./policy-engine.js": "./dist/policy-engine.js",
+    "./guardrails/prompt-guard.js": "./dist/guardrails/prompt-guard.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test --import tsx \"**/*.test.ts\"",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@daemon/data-platform": "workspace:*",
+    "@daemon/platform-types": "workspace:*",
+    "yaml": "^2.6.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

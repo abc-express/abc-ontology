@@ -1,0 +1,17 @@
+groups:
+  - name: daemon-platform
+    rules:
+      - alert: DaemonGatewayDown
+        expr: up{job="daemon-api-gateway"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: API gateway is unreachable
+      - alert: DaemonIngestHighLatency
+        expr: histogram_quantile(0.99, rate(daemon_ingest_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Ingest p99 latency above 2s

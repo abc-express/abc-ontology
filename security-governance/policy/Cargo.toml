@@ -1,0 +1,14 @@
+[package]
+name = "daemon-policy"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+serde_yaml = "0.9"
+thiserror = { workspace = true }
+
+[[bin]]
+name = "policy-server"
+path = "src/bin/policy-server.rs"

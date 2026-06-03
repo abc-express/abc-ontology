@@ -1,0 +1,33 @@
+{
+  "name": "@daemon/products",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./shared/product-runtime.js": "./dist/shared/product-runtime.js",
+    "./analytics-workflows/analytics-workflows.js": "./dist/analytics-workflows/analytics-workflows.js",
+    "./analytics-workflows/query-wizard.js": "./dist/analytics-workflows/query-wizard.js",
+    "./analytics-workflows/report-generator.js": "./dist/analytics-workflows/report-generator.js",
+    "./analytics-workflows/dashboard-builder.js": "./dist/analytics-workflows/dashboard-builder.js",
+    "./product-shell/product-router.js": "./dist/product-shell/product-router.js",
+    "./automations/automations-workflows.js": "./dist/automations/automations-workflows.js",
+    "./automations/task-orchestrator.js": "./dist/automations/task-orchestrator.js",
+    "./automations/approval-runner.js": "./dist/automations/approval-runner.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test --import tsx \"**/*.test.ts\"",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@daemon/action-runtime": "workspace:*",
+    "@daemon/ontology": "workspace:*",
+    "@daemon/platform-types": "workspace:*",
+    "@daemon/read-write-loops": "workspace:*",
+    "@daemon/security-governance": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

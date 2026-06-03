@@ -1,0 +1,22 @@
+# Data-platform policies: govern read/write access to stores and classifications.
+- action: read
+  resource: operational-store
+  effect: allow
+- action: write
+  resource: operational-store
+  effect: allow
+  conditions:
+    classification: [public, internal]
+- action: write
+  resource: operational-store
+  effect: deny
+  conditions:
+    classification: [restricted]
+- action: read
+  resource: vector-store
+  effect: allow
+- action: read
+  resource: lakehouse
+  effect: allow
+  conditions:
+    classification: [public, internal]

@@ -1,0 +1,28 @@
+gateway:
+  replicaCount: 2
+  image:
+    repository: daemon/api-gateway
+    tag: "0.1.0"
+  service:
+    port: 80
+  policyEngineUrl: http://daemon-policy:8090
+
+ingest:
+  replicaCount: 1
+  image:
+    repository: daemon/collect-sensing
+    tag: "0.1.0"
+  service:
+    port: 8081
+
+postgres:
+  enabled: true
+  url: postgres://daemon:daemon@postgres:5432/daemon
+
+redis:
+  enabled: true
+  url: redis://redis:6379
+
+nats:
+  enabled: true
+  url: nats://nats:4222

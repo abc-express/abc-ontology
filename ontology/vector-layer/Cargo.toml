@@ -1,0 +1,7 @@
+[package]
+name = "daemon-vector-layer"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde = { workspace = true }

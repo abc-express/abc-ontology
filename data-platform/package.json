@@ -1,0 +1,26 @@
+{
+  "name": "@daemon/data-platform",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./operational-store": "./dist/operational-store/postgres-client.js",
+    "./cache": "./dist/cache/redis-client.js",
+    "./graph-store": "./dist/graph-store/postgres-graph-store.js",
+    "./event-bus": "./dist/event-bus/nats-publisher.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test --import tsx operational-store/postgres-client.test.ts cache/redis-client.test.ts graph-store/postgres-graph-store.test.ts event-bus/nats-publisher.test.ts",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "pg": "^8.13.1",
+    "redis": "^4.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/pg": "^8.11.10",
+    "typescript": "^5.7.2"
+  }
+}

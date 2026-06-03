@@ -1,0 +1,6 @@
+tenants:
+  - id: default
+    displayName: Default
+    quotas:
+      maxEntities: 1000000
+      maxWritesPerMinute: 5000

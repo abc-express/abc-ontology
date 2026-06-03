@@ -1,0 +1,6 @@
+- action: read
+  resource: entity
+  effect: allow
+- action: write
+  resource: entity
+  effect: allow

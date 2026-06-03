@@ -1,0 +1,25 @@
+[workspace]
+resolver = "2"
+members = [
+  "engine/data-engine",
+  "engine/logic-engine",
+  "engine/action-engine",
+  "engine/security-engine",
+  "ontology/semantic-layer",
+  "ontology/vector-layer",
+  "ontology/shim",
+  "security-governance/policy",
+  "toolchain/sdk/rust",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "UNLICENSED"
+
+[workspace.dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+tracing = "0.1"

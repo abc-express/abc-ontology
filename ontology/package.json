@@ -1,0 +1,23 @@
+{
+  "name": "@daemon/ontology",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/registry/ontology-registry.js",
+  "types": "./dist/registry/ontology-registry.d.ts",
+  "exports": {
+    ".": "./dist/registry/ontology-registry.js",
+    "./vector-layer": "./dist/vector-layer/vector-store.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test --import tsx \"**/*.test.ts\"",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@daemon/platform-types": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

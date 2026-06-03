@@ -1,0 +1,19 @@
+# Action-runtime policies: govern workflow and command execution.
+- action: workflow.execute
+  resource: workflow
+  effect: allow
+  conditions:
+    requiresApproval: false
+- action: command.dispatch
+  resource: command
+  effect: allow
+  conditions:
+    requiresApproval: false
+- action: command.dispatch
+  resource: external-system
+  effect: allow
+  conditions:
+    requiresApproval: true
+- action: compensation.run
+  resource: workflow
+  effect: allow

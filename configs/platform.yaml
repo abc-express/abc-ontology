@@ -1,0 +1,14 @@
+platform:
+  name: daemon-ontology-platform
+  version: "0.1.0"
+tenancy:
+  defaultTenant: default
+  isolation: schema_per_tenant
+environments:
+  - name: dev
+    gatewayUrl: http://localhost:3000
+  - name: staging
+    gatewayUrl: https://staging.example.internal
+services:
+  collectSensing: http://localhost:8081
+  policyEngine: http://localhost:8082

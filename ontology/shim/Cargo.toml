@@ -1,0 +1,18 @@
+[package]
+name = "daemon-ontology-shim"
+version.workspace = true
+edition.workspace = true
+
+[lib]
+name = "daemon_ontology_shim"
+path = "src/lib.rs"
+
+[[bin]]
+name = "ontology-shim"
+path = "src/bin/ontology-shim.rs"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+daemon-semantic-layer = { path = "../semantic-layer" }
+daemon-vector-layer = { path = "../vector-layer" }

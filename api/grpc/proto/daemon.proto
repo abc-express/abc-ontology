@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package daemon.v1;
+
+// Daemon gRPC surface. A minimal but real contract: a health probe and a
+// read RPC backed by the same ontology registry the gateway uses.
+service Daemon {
+  rpc Health (HealthRequest) returns (HealthReply);
+  rpc Read (ReadRequest) returns (EntityReply);
+}
+
+message HealthRequest {}
+
+message HealthReply {
+  string status = 1;
+}
+
+message ReadRequest {
+  string entity_id = 1;
+  string ontology_id = 2;
+}
+
+message EntityReply {
+  string entity_id = 1;
+  string ontology_id = 2;
+  int32 version = 3;
+  string updated_at = 4;
+  // JSON-encoded properties bag (proto3 struct avoided to keep the contract flat).
+  string properties_json = 5;
+}

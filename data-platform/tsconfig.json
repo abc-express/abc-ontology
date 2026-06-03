@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": ".",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
+  },
+  "include": [
+    "operational-store/**/*.ts",
+    "cache/**/*.ts",
+    "graph-store/**/*.ts",
+    "event-bus/**/*.ts"
+  ],
+  "exclude": ["**/*.test.ts"]
+}

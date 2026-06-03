@@ -1,0 +1,45 @@
+{
+  "name": "daemon-sdk",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Daemon ontology platform monorepo",
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "dev:gateway": "pnpm exec turbo run build --filter=@daemon/api-gateway^... && DAEMON_INGEST_SKIP_UPSTREAM=1 DAEMON_POLICY_SKIP_UPSTREAM=1 pnpm --filter @daemon/api-gateway dev",
+    "dev:up": "pnpm run build --filter @daemon/cli && pnpm exec daemon-cli dev up",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm build && changeset publish",
+    "validate-config": "node packages/cli/dist/cli.js validate-config",
+    "test:repo": "pnpm run build && node --test --import tsx tests/policy/policy-fixture.test.ts tests/ontology/registry.test.ts tests/contract/api-contract.test.ts tests/e2e/ingest-read-write.test.ts tests/e2e/ingest-read-write-http.test.ts tests/integration/stores.integration.test.ts tests/integration/audit-postgres.integration.test.ts tests/integration/gateway-http.test.ts external-systems/adapters/system-adapter.test.ts toolchain/plugins/plugin-host.test.ts",
+    "spec:check": "node scripts/spec-check.mjs",
+    "spec:manifest": "node scripts/spec-check.mjs --manifest",
+    "release:check": "pnpm run build && cd packages/platform-types && npm pack --dry-run && cd ../sdk && npm pack --dry-run && cd ../cli && npm pack --dry-run"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "devDependencies": {
+    "@daemon/cli": "workspace:*",
+    "@daemon/api-gateway": "workspace:*",
+    "@daemon/ontology": "workspace:*",
+    "@daemon/platform-types": "workspace:*",
+    "@daemon/read-write-loops": "workspace:*",
+    "@daemon/data-platform": "workspace:*",
+    "@nestjs/common": "^10.4.15",
+    "@nestjs/core": "^10.4.15",
+    "@nestjs/platform-express": "^10.4.15",
+    "reflect-metadata": "^0.2.2",
+    "pg": "^8.13.1",
+    "redis": "^4.7.0",
+    "@changesets/cli": "^2.27.10",
+    "@types/node": "^22.10.2",
+    "tsx": "^4.19.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2",
+    "yaml": "^2.6.1"
+  }
+}

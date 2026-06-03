@@ -1,0 +1,21 @@
+{
+  "name": "@daemon/action-runtime",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./workflow-engine/workflow-orchestrator.js": {
+      "types": "./dist/workflow-engine/workflow-orchestrator.d.ts",
+      "import": "./dist/workflow-engine/workflow-orchestrator.js",
+      "default": "./dist/workflow-engine/workflow-orchestrator.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test --import tsx \"**/*.test.ts\"",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}
