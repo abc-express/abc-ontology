@@ -8,11 +8,11 @@ Ontology packs, domain catalogs, and governance configs form the semantic single
 
 Internal PDFs (Charter, Ontology Master, Technology OS) are not committed to the repo. They guide product policy; machine-readable configs below are the SSOT for CI and runtime.
 
-| Tier / source (internal) | Precedence | Role in repo (machine-readable) |
-|--------------------------|------------|--------------------------------|
-| Charter / Manifesto (PDF) | Highest | Product policy; not versioned in git |
-| Ontology Master v2.x (PDF) | Above Technology OS | Tier 0A methodology: entities, relations, junctions, action catalog |
-| Technology OS (PDF) | Operational / propagation | `configs/governance/propagation.yaml` |
+| Tier / source (internal) | Version pin (internal) | Precedence | Role in repo (machine-readable) |
+|--------------------------|------------------------|------------|--------------------------------|
+| Charter / Manifesto (PDF) | v1.0 / v1.2.1 | Highest | Product policy; not versioned in git |
+| Ontology Master (PDF) | **v2.0.3** | Above Technology OS | Tier 0A methodology: entities, relations, junctions, action catalog |
+| Technology OS (PDF) | **v1.1.1** | Operational / propagation | `configs/governance/propagation.yaml` |
 
 Public packs stay sector-agnostic (foundation). Do not copy logistics-specific entity names (e.g. shipment types) into public packs unless approved as a separate extension pack.
 
@@ -97,6 +97,16 @@ Gateway controllers must not import `globalRegistry` or `CommandGateway` directl
 | **Operational** | Postgres when `DAEMON_POSTGRES_URL` is set: `daemon_entity_snapshots`, `daemon_ontology_changes`, `daemon_graph_edges`, `daemon_audit` | Write-through journal with awaited `pendingWrites()`; RLS via `app.tenant_id`; replay on startup |
 
 PDFs (Charter, Ontology Master, Technology OS) remain human reference only — not committed. Extension packs (e.g. sector catalogs) are out of scope for this epic.
+
+### Planned extension: logistics-commercial
+
+| Artifact | Path | Status |
+|----------|------|--------|
+| Public PRD stub | [PRD-logistics-commercial-extension.md](./PRD-logistics-commercial-extension.md) | Draft — defines R1/R2 scope without institution-specific names |
+| Pack (planned) | `configs/ontology/packs/extensions/logistics-commercial/` | Not started |
+| Domain (planned) | `logistics` in `configs/ontology/domains/catalog.yaml` | Not started |
+
+Do not add logistics entity literals to `foundation` until the extension pack is approved and merged per the public PRD stub.
 
 **Definition of done (commercial SSOT epic):** foundation relations/junctions in CI; propagation + projection wired; breaking schema changes require approvals per `governance-policies.yaml`; Postgres path includes change log, scoped graph edges, and RLS tests.
 

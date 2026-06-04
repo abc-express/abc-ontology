@@ -33,5 +33,6 @@ The NestJS gateway exposes ingest, read, and write through `DaemonRuntime` rathe
 - **M5** Observability, deployment, toolchain, full test suite.
 - **Durability** (gateway): versioned Postgres migrations, entity snapshot journal + replay on startup, extended audit columns (`tenant_id`, `domain_id`, `metadata`). See [06-testing.md](./06-testing.md) and [06-deployment-topology.md](./06-deployment-topology.md).
 - **Commercial ontology SSOT** (gateway): foundation pack relations/junctions, executable propagation (`read-model-projection`, `audit-loop`), governance policy gates for breaking schema changes, Postgres change log + RLS + graph edge persistence for `Link`. See [08-semantic-governance-alignment.md](./08-semantic-governance-alignment.md).
+- **Logistics-commercial extension** (planned): public requirements stub in [PRD-logistics-commercial-extension.md](./PRD-logistics-commercial-extension.md); implementation follows approved extension pack, not foundation.
 
 See [01-end-to-end-architecture.md](./01-end-to-end-architecture.md) for the system diagram.

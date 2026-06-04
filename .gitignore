@@ -8,3 +8,8 @@ target/
 .DS_Store
 coverage/
 .terraform/
+
+# Private client governance sources and deliverables (NDA)
+docs/private/sources/
+docs/private/extracted/
+docs/private/client-definition/
