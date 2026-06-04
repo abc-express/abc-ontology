@@ -1,6 +1,14 @@
 import type { EntityRecord } from "@daemon/ontology";
+import type { EntityId, OntologyId } from "@daemon/platform-types";
+import { defaultOntology } from "@daemon/ontology";
 import { DaemonError, ErrorCodes } from "@daemon/platform-types";
 import type { ProductRuntime } from "../shared/product-runtime.js";
+import {
+  createChatOpenRouter,
+  chatOpenRouterAsLlm,
+  resolveOpenRouterApiKey,
+  type TextLlm,
+} from "../ontology-query/llm.js";
 
 export interface ChatTurn {
   role: "user" | "assistant";
@@ -13,16 +21,40 @@ export interface GptReply {
   guardEffect: "allow" | "deny";
 }
 
+export interface GptChatRequest {
+  turns: ChatTurn[];
+  ontologyId?: OntologyId;
+  limit?: number;
+  /** Pre-loaded context; when omitted, retrieval runs from the last user turn. */
+  context?: EntityRecord[];
+}
+
 /**
- * Customer-facing Q&A over ontology context. Uses PromptGuard on user input and
- * returns a deterministic answer grounded in supplied entity records (no external LLM).
+ * Customer-facing Q&A over ontology context with hybrid retrieval and optional LLM.
  */
 export class GptOrchestrator {
-  constructor(private readonly runtime: ProductRuntime) {}
+  private readonly llm: TextLlm | null;
 
-  converse(turns: ChatTurn[], context: EntityRecord[]): GptReply {
+  constructor(
+    private readonly runtime: ProductRuntime,
+    llm?: TextLlm | null,
+  ) {
+    if (llm !== undefined) {
+      this.llm = llm;
+    } else if (resolveOpenRouterApiKey()) {
+      try {
+        this.llm = chatOpenRouterAsLlm(createChatOpenRouter());
+      } catch {
+        this.llm = null;
+      }
+    } else {
+      this.llm = null;
+    }
+  }
+
+  async converse(req: GptChatRequest): Promise<GptReply> {
     this.runtime.assertAllowed("chat", "customer-gpt");
-    const lastUser = [...turns].reverse().find((t) => t.role === "user");
+    const lastUser = [...req.turns].reverse().find((t) => t.role === "user");
     if (!lastUser?.content.trim()) {
       throw new DaemonError(ErrorCodes.VALIDATION, "user message required", 400);
     }
@@ -34,10 +66,51 @@ export class GptOrchestrator {
         guardEffect: "deny",
       };
     }
+
+    const context =
+      req.context ??
+      (await this.retrieveContext(lastUser.content, req.ontologyId, req.limit));
     const citations = context.map((r) => `${r.ontologyId}/${r.entityId}`);
+
+    if (this.llm) {
+      return this.answerWithLlm(lastUser.content, context, citations);
+    }
+    return this.answerDeterministic(context, citations);
+  }
+
+  private async retrieveContext(
+    query: string,
+    ontologyIdOpt?: OntologyId,
+    limit = 8,
+  ): Promise<EntityRecord[]> {
+    const ont = ontologyIdOpt ?? defaultOntology();
+    if (this.runtime.search && this.runtime.scope) {
+      const hits = await this.runtime.search.search(this.runtime.scope, {
+        query,
+        limit,
+        ontologyId: ont,
+      });
+      const records: EntityRecord[] = [];
+      for (const hit of hits) {
+        const record = this.runtime.store.get(
+          this.runtime.scope,
+          hit.ontologyId as OntologyId,
+          hit.entityId as EntityId,
+        );
+        if (record) records.push(record);
+      }
+      if (records.length > 0) return records;
+    }
+    return [];
+  }
+
+  private answerDeterministic(
+    context: EntityRecord[],
+    citations: string[],
+  ): GptReply {
     const summary =
       context.length === 0
-        ? "No ontology entities were provided for this session."
+        ? "No matching ontology entities were found for this question."
         : context
             .slice(0, 5)
             .map(
@@ -50,5 +123,29 @@ export class GptOrchestrator {
       citations,
       guardEffect: "allow",
     };
+  }
+
+  private async answerWithLlm(
+    question: string,
+    context: EntityRecord[],
+    citations: string[],
+  ): Promise<GptReply> {
+    const llm = this.llm;
+    if (!llm) {
+      return this.answerDeterministic(context, citations);
+    }
+    const contextBlock =
+      context.length === 0
+        ? "No entity records."
+        : context
+            .map(
+              (r) =>
+                `- ${r.entityType ?? "Entity"} ${r.entityId}: ${JSON.stringify(r.properties).slice(0, 400)}`,
+            )
+            .join("\n");
+    const system = `You answer questions using only the provided ontology entity context. Cite entity ids when relevant. If context is empty, say you have no matching records.`;
+    const user = `Question: ${question}\n\nContext:\n${contextBlock}`;
+    const message = await llm.complete(system, user);
+    return { message, citations, guardEffect: "allow" };
   }
 }

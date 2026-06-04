@@ -9,7 +9,6 @@ import {
   foundationPackRoot,
   extensionPackRoot,
 } from "./load-pack.js";
-import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 export interface PackDiffEntry {

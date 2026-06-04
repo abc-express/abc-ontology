@@ -87,3 +87,5 @@ Loop failures map to escalation levels in `read-write-loops/loop-controller/esca
 | Incident response runbook | This doc (category 2) | Audit → SIEM → on-call; escalation levels in loop controller |
 
 Audit actions for ontology paths include `ontology.register`, `ontology.patch`, and `ontology.schema.change` (when schema gates run).
+
+Policy-gated HTTP and `DaemonClient` methods (`checkPolicy`, ingest, write, automations): [13-sdk.md](./13-sdk.md).

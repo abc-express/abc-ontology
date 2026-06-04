@@ -8,6 +8,8 @@ export interface DomainDefinition {
   packId?: string;
   packIds?: string[];
   extensionPack?: string;
+  /** Logical pack branch (e.g. main, staging); surfaced in pack-resolution API. */
+  packBranch?: string;
   description?: string;
 }
 

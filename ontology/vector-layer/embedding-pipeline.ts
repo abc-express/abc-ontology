@@ -1,13 +1,17 @@
 import { tokenize } from "../semantic-layer/semantic-index.js";
+import type { TextEmbedder } from "./text-embedder.js";
 
 /**
  * Deterministic, dependency-free embedding pipeline. Hashes tokens into a
  * fixed-width bag-of-words vector and L2-normalizes it. Deterministic output is
  * essential so tests and the Rust shim can be compared for parity.
  */
-export class EmbeddingPipeline {
-  constructor(private readonly dimension = 64) {
+export class EmbeddingPipeline implements TextEmbedder {
+  readonly dimension: number;
+
+  constructor(dimension = 64) {
     if (dimension <= 0) throw new Error("dimension must be > 0");
+    this.dimension = dimension;
   }
 
   private hash(token: string): number {

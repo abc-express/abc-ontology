@@ -1,5 +1,5 @@
 import { RetrievalService } from "../semantic-layer/retrieval-service.js";
-import { EmbeddingPipeline } from "./embedding-pipeline.js";
+import type { TextEmbedder } from "./text-embedder.js";
 import { VectorStore } from "./vector-store.js";
 
 export interface HybridHit {
@@ -17,17 +17,24 @@ export class HybridSearch {
   constructor(
     private readonly retrieval: RetrievalService,
     private readonly vectors: VectorStore,
-    private readonly embedder: EmbeddingPipeline,
+    private readonly embedder: TextEmbedder,
     private readonly alpha = 0.5,
   ) {
     if (alpha < 0 || alpha > 1) throw new Error("alpha must be in [0,1]");
   }
 
   search(query: string, k = 10): HybridHit[] {
+    return this.searchWithQueryVector(this.embedder.embed(query), query, k);
+  }
+
+  searchWithQueryVector(
+    queryVector: number[],
+    query: string,
+    k = 10,
+  ): HybridHit[] {
     const keyword = new Map(
       this.retrieval.search(query, k * 2).map((h) => [h.id, h.score]),
     );
-    const queryVector = this.embedder.embed(query);
     const vector = new Map(
       this.vectors.nearest(queryVector, k * 2).map((m) => [m.id, m.similarity]),
     );

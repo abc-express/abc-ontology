@@ -56,4 +56,28 @@ export class GovernanceService {
       diff,
     };
   }
+
+  promotePack(body: {
+    packId: string;
+    fromEnv?: string;
+    toEnv: string;
+    version?: string;
+  }) {
+    const fromEnv = body.fromEnv ?? "dev";
+    const version = body.version ?? new Date().toISOString().slice(0, 10);
+    const gate = this.runtime.governance.assertSchemaChange({
+      packId: body.packId,
+      breaking: false,
+      approvals: [`promote:${fromEnv}->${body.toEnv}`],
+    });
+    return {
+      promoted: gate.allowed,
+      packId: body.packId,
+      fromEnv,
+      toEnv: body.toEnv,
+      version,
+      reason: gate.reason,
+      artifactUri: `pack://${body.packId}/${body.toEnv}/${version}`,
+    };
+  }
 }

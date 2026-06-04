@@ -23,6 +23,33 @@ services:
     ports:
       - "4317:4317"
       - "4318:4318"
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: daemon
+      MINIO_ROOT_PASSWORD: daemon-dev-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
+  redpanda:
+    image: redpandadata/redpanda:v24.2.4
+    command:
+      - redpanda
+      - start
+      - --smp
+      - "1"
+      - --overprovisioned
+      - --kafka-addr
+      - internal://0.0.0.0:9092,external://0.0.0.0:19092
+      - --advertise-kafka-addr
+      - internal://redpanda:9092,external://127.0.0.1:19092
+    ports:
+      - "19092:19092"
+
   neo4j:
     image: neo4j:5-community
     environment:
@@ -36,3 +63,4 @@ services:
 
 volumes:
   neo4j_data:
+  minio_data:

@@ -22,6 +22,20 @@ async function main(): Promise<void> {
         await run("node", [path.join(repoRoot, "scripts/validate-ontology-pack.mjs")]);
         break;
       }
+      if (args[0] === "generate-sdk") {
+        const packIdx = args.indexOf("--pack");
+        const pack = packIdx >= 0 ? args[packIdx + 1] : "foundation";
+        const outIdx = args.indexOf("--out");
+        const outArgs = ["--pack", pack];
+        if (outIdx >= 0 && args[outIdx + 1]) {
+          outArgs.push("--out", args[outIdx + 1]);
+        }
+        await run("node", [
+          path.join(repoRoot, "scripts/generate-pack-sdk.mjs"),
+          ...outArgs,
+        ]);
+        break;
+      }
       if (args[0] === "validate-schema-change") {
         const proposedDirIdx = args.indexOf("--proposed-dir");
         const proposedPackDir =
@@ -75,7 +89,7 @@ async function main(): Promise<void> {
       throw new Error(`unknown dev subcommand: ${args.join(" ")}`);
     default:
       console.error(
-        "Usage: daemon-cli validate-config | ontology lint | ontology validate-schema-change ... | graph backfill-neo4j [--tenant-id T] [--domain-id D] [--dry-run] | dev up",
+        "Usage: daemon-cli validate-config | ontology lint | ontology generate-sdk [--pack foundation] [--out path] | ontology validate-schema-change ... | graph backfill-neo4j [--tenant-id T] [--domain-id D] [--dry-run] | dev up",
       );
       process.exit(1);
   }

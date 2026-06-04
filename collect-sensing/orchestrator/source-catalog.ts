@@ -6,7 +6,10 @@ export type ConnectorType =
   | "file"
   | "http-pull"
   | "postgres-read"
-  | "event-subscriber";
+  | "event-subscriber"
+  | "s3"
+  | "kafka"
+  | "jdbc-cdc";
 
 export interface FileConnectorConfig {
   readonly type: "file";
@@ -38,11 +41,42 @@ export interface EventSubscriberConnectorConfig {
   readonly pullTimeoutMs?: number;
 }
 
+export interface S3ConnectorConfig {
+  readonly type: "s3";
+  readonly bucket: string;
+  readonly prefix?: string;
+  readonly region?: string;
+  readonly format: "jsonl" | "csv";
+  readonly keys?: readonly string[];
+  readonly recordIdKey?: string;
+  readonly endpoint?: string;
+}
+
+export interface KafkaConnectorConfig {
+  readonly type: "kafka";
+  readonly brokers: readonly string[];
+  readonly topic: string;
+  readonly groupId?: string;
+  readonly maxMessages?: number;
+  readonly recordIdKey?: string;
+}
+
+export interface JdbcCdcConnectorConfig {
+  readonly type: "jdbc-cdc";
+  readonly table: string;
+  readonly cursorColumn: string;
+  readonly lastCursor?: string;
+  readonly recordIdColumn?: string;
+}
+
 export type SourceConnectorConfig =
   | FileConnectorConfig
   | HttpPullConnectorConfig
   | PostgresReadConnectorConfig
-  | EventSubscriberConnectorConfig;
+  | EventSubscriberConnectorConfig
+  | S3ConnectorConfig
+  | KafkaConnectorConfig
+  | JdbcCdcConnectorConfig;
 
 export interface SourceNormalizeConfig {
   readonly ontologyId: string;
@@ -134,6 +168,78 @@ function parseConnector(raw: unknown, sourceId: string): SourceConnectorConfig {
         typeof obj.pullTimeoutMs === "number" ? obj.pullTimeoutMs : undefined,
     };
   }
+  if (type === "s3") {
+    const bucket = obj.bucket;
+    if (typeof bucket !== "string" || !bucket.trim()) {
+      throw new Error(`source ${sourceId}: s3 requires bucket`);
+    }
+    const format = obj.format;
+    if (format !== "jsonl" && format !== "csv") {
+      throw new Error(`source ${sourceId}: s3 format must be jsonl|csv`);
+    }
+    const keys = Array.isArray(obj.keys)
+      ? obj.keys.filter((k): k is string => typeof k === "string")
+      : undefined;
+    return {
+      type: "s3",
+      bucket: bucket.trim(),
+      prefix: typeof obj.prefix === "string" ? obj.prefix : undefined,
+      region: typeof obj.region === "string" ? obj.region : undefined,
+      format,
+      keys,
+      recordIdKey:
+        typeof obj.recordIdKey === "string" ? obj.recordIdKey : undefined,
+      endpoint: typeof obj.endpoint === "string" ? obj.endpoint : undefined,
+    };
+  }
+  if (type === "kafka") {
+    const topic = obj.topic;
+    if (typeof topic !== "string" || !topic.trim()) {
+      throw new Error(`source ${sourceId}: kafka requires topic`);
+    }
+    const brokersRaw = obj.brokers;
+    const brokers = Array.isArray(brokersRaw)
+      ? brokersRaw.filter(
+          (b): b is string => typeof b === "string" && b.trim().length > 0,
+        )
+      : typeof obj.broker === "string"
+        ? [obj.broker]
+        : [];
+    if (brokers.length === 0) {
+      throw new Error(`source ${sourceId}: kafka requires brokers array`);
+    }
+    return {
+      type: "kafka",
+      brokers,
+      topic: topic.trim(),
+      groupId: typeof obj.groupId === "string" ? obj.groupId : undefined,
+      maxMessages:
+        typeof obj.maxMessages === "number" ? obj.maxMessages : undefined,
+      recordIdKey:
+        typeof obj.recordIdKey === "string" ? obj.recordIdKey : undefined,
+    };
+  }
+  if (type === "jdbc-cdc") {
+    const table = obj.table;
+    const cursorColumn = obj.cursorColumn;
+    if (typeof table !== "string" || !table.trim()) {
+      throw new Error(`source ${sourceId}: jdbc-cdc requires table`);
+    }
+    if (typeof cursorColumn !== "string" || !cursorColumn.trim()) {
+      throw new Error(`source ${sourceId}: jdbc-cdc requires cursorColumn`);
+    }
+    return {
+      type: "jdbc-cdc",
+      table: table.trim(),
+      cursorColumn: cursorColumn.trim(),
+      lastCursor:
+        typeof obj.lastCursor === "string" ? obj.lastCursor : undefined,
+      recordIdColumn:
+        typeof obj.recordIdColumn === "string"
+          ? obj.recordIdColumn
+          : undefined,
+    };
+  }
   throw new Error(
     `source ${sourceId}: unsupported connector type ${String(type)}`,
   );
@@ -216,7 +322,17 @@ export class SourceCatalog {
       throw new Error("sources.yaml must contain a sources array");
     }
     const parsed = doc.sources.map(parseSource);
-    return new SourceCatalog(parsed);
+    const parityFixtures =
+      process.env.DAEMON_PARITY_FIXTURES === "1" ||
+      process.env.DAEMON_PARITY_FIXTURES === "true";
+    const sources = parityFixtures
+      ? parsed.map((s) =>
+          s.id === "fixture-http-pull" || s.id === "fixture-postgres-read"
+            ? { ...s, enabled: true }
+            : s,
+        )
+      : parsed;
+    return new SourceCatalog(sources);
   }
 
   list(): IngestSourceDefinition[] {

@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "daemon-platform.fullname" . }}-agent-worker
+  labels:
+    {{- include "daemon-platform.labels" . | nindent 4 }}
+    app.kubernetes.io/component: agent-worker
+spec:
+  replicas: {{ .Values.agentWorker.replicas }}
+  selector:
+    matchLabels:
+      {{- include "daemon-platform.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: agent-worker
+  template:
+    metadata:
+      labels:
+        {{- include "daemon-platform.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: agent-worker
+    spec:
+      containers:
+        - name: agent-worker
+          image: "{{ .Values.agentWorker.image.repository }}:{{ .Values.agentWorker.image.tag }}"
+          env:
+            - name: DAEMON_GATEWAY_URL
+              value: "http://{{ include "daemon-platform.fullname" . }}-gateway:{{ .Values.gateway.service.port }}"

@@ -33,6 +33,10 @@ export class DurableOntologyStore implements OntologyStore {
     return this.inner;
   }
 
+  entityJournal(): EntityJournal {
+    return this.journal;
+  }
+
   /** Awaits all in-flight journal writes (for tests and shutdown). */
   pendingWrites(): Promise<void> {
     return this.persistChain;

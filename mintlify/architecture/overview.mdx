@@ -1,0 +1,52 @@
+---
+title: "Architecture overview"
+description: "Purpose, scope, bounded contexts, and delivery milestones for the DAEMON SDK monorepo."
+---
+
+## Purpose
+
+DAEMON SDK implements a semantic control plane: ingest external data, model it in an ontology, serve reads and governed writes to humans and agents, and execute workflows with security and audit across the stack.
+
+## Confirmed scope
+
+| Item | Choice |
+|------|--------|
+| Layout | Monorepo at repository root |
+| npm | `@daemon/platform-types`, `@daemon/sdk`, `@daemon/cli` |
+| API | NestJS (`api/gateway`) |
+| Tests | testcontainers / docker-compose — no mocks in integration or e2e |
+
+## Bounded contexts
+
+1. **collect-sensing** — ingest, normalize, enrich only; no business decisions.
+2. **ontology** — entities, relations, events, semantic index, vectors, projections; scoped by tenant and domain.
+3. **read-write-loops** — all human/agent reads and writes, approvals, external writes.
+4. **action-runtime** — workflows, agents, commands; does not own ontology definitions.
+5. **security-governance** — cross-cutting auth, policy, audit, guardrails.
+6. **context-ports** (`@daemon/context-ports`) — `OntologyStore` and `AuditPort` interfaces used by the gateway composition root.
+
+The NestJS gateway exposes ingest, read, and write through `DaemonRuntime` rather than calling registry or command types directly. See [Bounded contexts](/architecture/bounded-contexts) and [Semantic governance alignment](/semantics/governance-alignment).
+
+## Milestones
+
+| Milestone | Scope |
+|-----------|--------|
+| **M1** | Foundation: configs, language validators, engines, data-platform clients, platform-types |
+| **M2** | Ingest + ontology (Go/Rust/TS) |
+| **M3** | Read/write loops + security |
+| **M4** | Action runtime + NestJS + SDK/CLI |
+| **M5** | Observability, deployment, toolchain, full test suite |
+| **Durability** | Versioned Postgres migrations, entity snapshot journal + replay, extended audit columns |
+| **Commercial ontology SSOT** | Foundation pack, propagation, governance gates, Postgres change log + RLS + graph edges |
+| **Logistics extension (P0)** | Extension pack and `logistics` domain; propagation and gateway tests |
+| **Semantic + vector search** | `semantic-vector-index`; `GET /v1/search` and QueryWizard |
+| **Lakehouse bronze** | `lakehouse-bronze`; `GET /v1/lakehouse/events` |
+| **Customer GPT** | `POST /v1/products/customer-gpt/chat` with hybrid retrieval |
+| **Connectors catalog** | `configs/collect-sensing/connectors-catalog.yaml`; `pnpm run check:sources` |
+| **TypeScript SDK** | `@daemon/sdk` `DaemonClient`, pack codegen, OpenAPI parity — [SDK guide](/guides/sdk) |
+| **Platform maps** | Data integration, connections, Data Ops lifecycle, decision model, enterprise layers — [Platform maps](/platform/data-integration-map) |
+| **Product parity program** | Weighted capability matrix; CI `check:parity-matrix` and golden integration tests — [Product parity](/platform/product-parity) |
+| **Production E2E (DSDK)** | Connectors, lakehouse export, logistics P1, console, Helm/K8s, observability runbook, `dsdk-production-smoke` |
+| **Go-live guide** | Minimal / Standard / Full profiles and cutover checklist — [Go live](/operations/go-live) |
+
+See [End-to-end architecture](/architecture/end-to-end) for the system diagram.

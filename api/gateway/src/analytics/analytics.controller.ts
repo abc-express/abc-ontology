@@ -1,4 +1,4 @@
-import { Controller, Get, Query } from "@nestjs/common";
+import { Controller, Get, Headers, Query } from "@nestjs/common";
 import { AnalyticsService } from "./analytics.service";
 
 /**
@@ -11,6 +11,7 @@ export class AnalyticsController {
 
   @Get("search")
   searchReport(
+    @Headers() headers: Record<string, string | string[] | undefined>,
     @Query("q") q: string,
     @Query("ontologyId") ontologyId?: string,
     @Query("limit") limit?: string,
@@ -18,7 +19,7 @@ export class AnalyticsController {
     @Query("propertyValue") propertyValue?: string,
     @Query("reportTitle") reportTitle?: string,
   ) {
-    return this.analytics.searchReport({
+    return this.analytics.searchReport(headers, {
       q: q ?? "",
       ontologyId,
       limit: limit ? Number(limit) : undefined,
@@ -30,13 +31,14 @@ export class AnalyticsController {
 
   @Get("entities")
   searchEntities(
+    @Headers() headers: Record<string, string | string[] | undefined>,
     @Query("q") q: string,
     @Query("ontologyId") ontologyId?: string,
     @Query("limit") limit?: string,
     @Query("property") property?: string,
     @Query("propertyValue") propertyValue?: string,
   ) {
-    return this.analytics.searchEntities({
+    return this.analytics.searchEntities(headers, {
       q: q ?? "",
       ontologyId,
       limit: limit ? Number(limit) : undefined,
@@ -47,9 +49,19 @@ export class AnalyticsController {
 
   @Get("dashboard")
   dashboard(
+    @Headers() headers: Record<string, string | string[] | undefined>,
     @Query("ontologyId") ontologyId?: string,
     @Query("breakdownField") breakdownField?: string,
   ) {
-    return this.analytics.dashboard({ ontologyId, breakdownField });
+    return this.analytics.dashboard(headers, { ontologyId, breakdownField });
+  }
+
+  @Get("lakehouse-summary")
+  lakehouseSummary(
+    @Headers() headers: Record<string, string | string[] | undefined>,
+    @Query("since") since?: string,
+    @Query("reportTitle") reportTitle?: string,
+  ) {
+    return this.analytics.lakehouseSummary(headers, { since, reportTitle });
   }
 }

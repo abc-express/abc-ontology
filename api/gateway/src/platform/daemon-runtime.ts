@@ -13,6 +13,7 @@ import { resolveOntologyRegistry } from "@daemon/ontology/store/resolve-registry
 import { DurableOntologyStore } from "@daemon/ontology/store/durable-ontology-store.js";
 import { ReadRouter } from "@daemon/read-write-loops/reads/read-router.js";
 import { CommandGateway } from "@daemon/read-write-loops/writes/command-gateway.js";
+import { evaluateWriteWithLogicEngine } from "@daemon/read-write-loops/writes/logic-engine-client.js";
 import { LoopOrchestrator } from "@daemon/read-write-loops/loop-controller/loop-orchestrator.js";
 import {
   PolicyEngine,
@@ -44,6 +45,11 @@ import {
   WorkflowOrchestrator,
   type WorkflowStep,
 } from "@daemon/action-runtime/workflow-engine/workflow-orchestrator.js";
+import { ScopedOntologySearch } from "@daemon/ontology/search/scoped-ontology-search.js";
+import { BronzeWriter } from "@daemon/data-platform/lakehouse/bronze-writer";
+import { BronzeReader } from "@daemon/data-platform/lakehouse/bronze-reader";
+import { SilverWriter } from "@daemon/data-platform/lakehouse/silver-writer";
+import { LakehouseReader } from "@daemon/data-platform/lakehouse/lakehouse-reader";
 
 /** Test fallback when action-catalog.yaml is missing. */
 export const DEFAULT_GATEWAY_POLICY_RULES: PolicyRule[] = [
@@ -53,6 +59,22 @@ export const DEFAULT_GATEWAY_POLICY_RULES: PolicyRule[] = [
   { action: "ingest", resource: "ingest-job", effect: "allow" },
   { action: "ingest", resource: "ingest-source", effect: "allow" },
   { action: "query", resource: "ontology-nl", effect: "allow" },
+  { action: "query", resource: "ontology-search", effect: "allow" },
+  { action: "query", resource: "analytics", effect: "allow" },
+  { action: "read", resource: "lakehouse", effect: "allow" },
+  { action: "chat", resource: "customer-gpt", effect: "allow" },
+  { action: "read", resource: "agent-session", effect: "allow" },
+  { action: "read", resource: "function-invoke", effect: "allow" },
+  { action: "ingest", resource: "ingest-schedule", effect: "allow" },
+  { action: "ingest", resource: "ingest-webhook", effect: "allow" },
+  { action: "read", resource: "data-health", effect: "allow" },
+  { action: "write", resource: "lakehouse-export", effect: "allow" },
+  { action: "read", resource: "media", effect: "allow" },
+  { action: "write", resource: "media", effect: "allow" },
+  { action: "read", resource: "ontology-pack", effect: "allow" },
+  { action: "write", resource: "pipeline", effect: "allow" },
+  { action: "write", resource: "eval", effect: "allow" },
+  { action: "read", resource: "eval", effect: "allow" },
 ];
 
 function resolveGatewayPolicyRules(): PolicyRule[] {
@@ -94,6 +116,11 @@ export class DaemonRuntime {
   readonly projection: EntityReadModelProjection;
   readonly materializedViews: Map<string, MaterializedView>;
   readonly propagation: PropagationExecutor;
+  readonly search: ScopedOntologySearch;
+  readonly lakehouseBronze: BronzeWriter;
+  readonly lakehouseBronzeReader: BronzeReader;
+  readonly lakehouseSilver: SilverWriter;
+  readonly lakehouseReader: LakehouseReader;
   readonly actionCatalog: ActionCatalogManifest | undefined;
   readonly neo4jStore: Neo4jGraphStore | null;
   private readonly workflows = new WorkflowOrchestrator();
@@ -141,6 +168,11 @@ export class DaemonRuntime {
         ),
       ],
     ]);
+    this.search = new ScopedOntologySearch();
+    this.lakehouseBronze = BronzeWriter.fromEnv();
+    this.lakehouseBronzeReader = BronzeReader.fromEnv();
+    this.lakehouseSilver = SilverWriter.fromEnv();
+    this.lakehouseReader = LakehouseReader.fromEnv();
     this.neo4jStore = Neo4jGraphStore.fromEnv();
     const neo4jGraphSync = this.neo4jStore
       ? new Neo4jGraphSync(this.neo4jStore)
@@ -151,6 +183,9 @@ export class DaemonRuntime {
       materializedViews: this.materializedViews,
       graphEdgeSync: new GraphEdgeSyncPort(this.audit),
       neo4jGraphSync,
+      ontologySearch: this.search,
+      lakehouseBronze: this.lakehouseBronze,
+      lakehouseSilver: this.lakehouseSilver,
     });
     this.wireSemanticLayer();
   }
@@ -316,6 +351,15 @@ export class DaemonRuntime {
       workflowResults?: string[];
     }
   > {
+    await evaluateWriteWithLogicEngine({
+      session: req.session as import("@daemon/platform-types").DaemonSession,
+      tenantId: scope.tenantId,
+      domainId: scope.domainId,
+      ontologyId: req.ontologyId as import("@daemon/platform-types").OntologyId,
+      entityId: req.entityId as import("@daemon/platform-types").EntityId,
+      patch: req.patch,
+      idempotencyKey: req.idempotencyKey,
+    });
     const loop = this.createLoop();
     const outcome = loop.run({
       session: req.session as import("@daemon/platform-types").DaemonSession,
@@ -401,6 +445,26 @@ export async function initDaemonRuntime(
       if (neo4j) {
         const schema = buildPackGraphSchema();
         await neo4j.ensureSchema(schema.constraintStatements);
+      }
+      if (env.DAEMON_POSTGRES_URL && env.DAEMON_SEARCH_REPLAY !== "0") {
+        const { PostgresEntityJournal } = await import(
+          "@daemon/data-platform/operational-store/entity-journal"
+        );
+        const { replaySearchIndex } = await import(
+          "@daemon/ontology/search/replay-search-index.js"
+        );
+        const journal = PostgresEntityJournal.fromEnv(env);
+        if (journal) {
+          const replayLog = new StructuredLogger({
+            service: "daemon-search-replay",
+          });
+          const started = Date.now();
+          const count = await replaySearchIndex(singleton.search, journal);
+          replayLog.info("search_index_replay", {
+            count,
+            durationMs: Date.now() - started,
+          });
+        }
       }
       singleton.assertProductionSsot(env);
       return singleton;

@@ -24,6 +24,34 @@ spec:
               value: "3000"
             - name: POLICY_ENGINE_URL
               value: http://daemon-policy:8090
+            - name: DAEMON_POSTGRES_URL
+              valueFrom:
+                secretKeyRef:
+                  name: daemon-db
+                  key: url
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector:4318
+            - name: DAEMON_ONTOLOGY_QUERY_ENABLED
+              value: "0"
+            - name: DAEMON_NEO4J_URI
+              valueFrom:
+                secretKeyRef:
+                  name: daemon-neo4j
+                  key: uri
+                  optional: true
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
           readinessProbe:
             httpGet:
               path: /health

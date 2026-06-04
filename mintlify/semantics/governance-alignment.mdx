@@ -1,0 +1,42 @@
+---
+title: "Semantic governance alignment"
+description: "How ontology packs, propagation, and internal reference tiers map to repo configs and CI."
+---
+
+Ontology packs, domain catalogs, and governance configs are the **machine-readable SSOT** for what entities may exist, required fields, and how changes propagate across tenants and domains.
+
+## Precedence (human reference)
+
+Internal reference PDFs guide product policy; they are not committed to the repo. Runtime and CI use configs under `configs/`.
+
+| Source (internal) | Role in repo |
+|-------------------|--------------|
+| Charter / Manifesto | Product policy — not versioned in git |
+| Ontology Master v2.0.3 | Tier 0A methodology → foundation pack YAML |
+| Technology OS v1.1.1 | `configs/governance/propagation.yaml` |
+
+Public packs stay sector-agnostic (foundation). Domain-specific types belong in **extension packs** (e.g. `logistics`), not foundation YAML.
+
+## Ontology Master → implementation
+
+| Concept | Implementation | Validation |
+|---------|----------------|------------|
+| Entity types | `configs/ontology/packs/foundation/entities/*.yaml` | `pnpm run check:ontology-pack` |
+| Relations / junctions | `relations/`, `junctions/` | `pnpm run check:ontology-pack` |
+| Action catalog | `configs/governance/action-catalog.yaml` | policy fixtures; `@PolicyCheck` |
+| Domain catalog | `configs/ontology/domains/catalog.yaml` | `pnpm run check:tenancy-config` |
+| Graph read model | Neo4j sync + `docs/10-neo4j-graph-model.md` | backfill CLI |
+
+## Technology OS → implementation
+
+| Concept | Implementation |
+|---------|----------------|
+| Propagation | `configs/governance/propagation.yaml` → `PropagationExecutor` |
+| Multi-tenant headers | `configs/tenancy.yaml` + `X-Daemon-Tenant` / `X-Daemon-Domain` |
+| Workflows / agents | `action-runtime/` via `products/automations/` |
+
+<Warning>
+  Do not paste confidential client extracts into this public Mintlify site. Keep client-specific definition under `docs/private/` only.
+</Warning>
+
+Full mapping tables: `docs/08-semantic-governance-alignment.md`.

@@ -33,8 +33,8 @@ export class AnalyticsWorkflows {
     return this.query.search(req);
   }
 
-  searchAndReport(req: SearchReportRequest): AnalyticsReport {
-    const records = this.query.search(req);
+  async searchAndReport(req: SearchReportRequest): Promise<AnalyticsReport> {
+    const records = await this.query.search(req);
     const title =
       req.reportTitle ??
       (req.query.trim() ? `Search: ${req.query.trim()}` : "Ontology search");

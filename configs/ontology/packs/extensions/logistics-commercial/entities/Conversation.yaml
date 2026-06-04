@@ -1,0 +1,17 @@
+entityType: Conversation
+fields:
+  - name: channel
+    type: string
+    required: false
+  - name: subject
+    type: string
+    required: false
+  - name: accountRef
+    type: string
+    required: false
+  - name: opportunityRef
+    type: string
+    required: false
+  - name: occurredAt
+    type: string
+    required: false

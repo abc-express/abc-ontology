@@ -1,0 +1,14 @@
+entityType: Opportunity
+fields:
+  - name: title
+    type: string
+    required: true
+  - name: stage
+    type: string
+    required: false
+  - name: accountRef
+    type: string
+    required: false
+  - name: expectedValue
+    type: number
+    required: false

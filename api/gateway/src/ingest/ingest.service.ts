@@ -47,6 +47,36 @@ export class IngestService {
     return this.post<JobResult>("/v1/jobs", { sourceId });
   }
 
+  async listJobs(): Promise<{ items: JobResult[] }> {
+    const url = process.env.DAEMON_POSTGRES_URL;
+    if (!url) {
+      return { items: [] };
+    }
+    const { PostgresClient } = await import(
+      "@daemon/data-platform/operational-store"
+    );
+    const client = new PostgresClient({ connectionString: url });
+    const { rows } = await client.query<{
+      id: string;
+      source_id: string;
+      last_status: string | null;
+      last_run_at: string | null;
+    }>(
+      `SELECT id, source_id, last_status, last_run_at
+       FROM daemon_ingest_schedules
+       ORDER BY updated_at DESC NULLS LAST
+       LIMIT 100`,
+    );
+    return {
+      items: rows.map((r) => ({
+        jobId: r.id,
+        status: r.last_status ?? "scheduled",
+        sourceId: r.source_id,
+        startedAt: r.last_run_at ?? undefined,
+      })),
+    };
+  }
+
   async getJob(jobId: string): Promise<JobResult> {
     const res = await fetch(`${this.baseUrl}/v1/jobs/${encodeURIComponent(jobId)}`);
     if (res.status === 404) {
@@ -79,14 +109,19 @@ export class IngestService {
   ): Promise<IngestResult> {
     await this.registerOntologyRecords(ctx, records);
     if (this.skipUpstream) {
-      return {
-        jobId: `local-${sourceId}`,
-        status: "accepted",
-        sourceId,
-        accepted: records.length,
-      };
+      return localIngestResult(sourceId, records.length);
     }
-    return this.post<IngestResult>("/ingest/records", { sourceId, records });
+    try {
+      return await this.post<IngestResult>("/ingest/records", { sourceId, records });
+    } catch (error) {
+      if (
+        error instanceof DaemonError &&
+        error.code === ErrorCodes.UPSTREAM
+      ) {
+        return localIngestResult(sourceId, records.length, "accepted-local");
+      }
+      throw error;
+    }
   }
 
   private async registerOntologyRecords(
@@ -142,6 +177,19 @@ export class IngestService {
     }
     return (await res.json()) as T;
   }
+}
+
+function localIngestResult(
+  sourceId: string,
+  accepted: number,
+  status = "accepted",
+): IngestResult {
+  return {
+    jobId: `local-${sourceId}-${Date.now()}`,
+    status,
+    sourceId,
+    accepted,
+  };
 }
 
 async function safeText(res: Response): Promise<string> {

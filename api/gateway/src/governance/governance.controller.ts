@@ -14,4 +14,17 @@ export class GovernanceController {
   validateChange(@Body() body: ValidatePackChangeRequest | SchemaChangeDescriptor) {
     return this.governance.validatePackChange(body);
   }
+
+  @Post("promote")
+  promote(
+    @Body()
+    body: {
+      packId: string;
+      fromEnv?: string;
+      toEnv: string;
+      version?: string;
+    },
+  ) {
+    return this.governance.promotePack(body);
+  }
 }

@@ -20,3 +20,21 @@ actions:
   - id: query
     resource: ontology-nl
     effect: allow
+  - id: query
+    resource: ontology-search
+    effect: allow
+  - id: query
+    resource: analytics
+    effect: allow
+  - id: read
+    resource: lakehouse
+    effect: allow
+  - id: chat
+    resource: customer-gpt
+    effect: allow
+  - id: read
+    resource: agent-session
+    effect: allow
+  - id: read
+    resource: function-invoke
+    effect: allow

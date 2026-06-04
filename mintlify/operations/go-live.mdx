@@ -1,0 +1,138 @@
+---
+title: "Deployment go-live"
+description: "Cut over a single customer environment from parity-green CI to production—profiles, sequence, and domain checklist."
+---
+
+Operational checklist for taking **one customer environment** from parity-green CI to a running production stack. Read [Deployment topology](/operations/deployment) for service layout and [Product parity](/platform/product-parity) for what the mimic stack already covers in-repo.
+
+## Prerequisites
+
+| Requirement | Notes |
+|-------------|--------|
+| **Postgres** | `DAEMON_POSTGRES_URL` on Postgres 16+ with TLS in prod (`configs/environments/prod.yaml` sets `ssl: true`). |
+| **Migrations** | `pnpm run db:migrate` before starting the gateway. |
+| **Tenant and domain** | Foundation pack under `configs/ontology/packs/foundation/`; extension packs per customer. |
+| **API keys / auth** | `security.enforceAuth: true` in prod. Gateway auth is API-key oriented—not a full enterprise IdP in the gateway layer. |
+| **Optional upstream** | Connector credentials; `DAEMON_WEBHOOK_HMAC_SECRET` for webhooks. |
+| **Optional LLM** | OpenRouter (or equivalent) when Customer GPT is enabled. |
+| **Optional Neo4j** | `DAEMON_ONTOLOGY_QUERY_ENABLED=1` and bolt URI — [Observability runbook](/operations/observability-runbook). |
+
+<Warning>
+Production rejects memory-only SSOT. Set `DAEMON_POSTGRES_URL` before go-live. Do not use `DAEMON_SSOT_MODE=memory` outside explicit dev overrides.
+</Warning>
+
+## Deployment profiles
+
+All profiles assume Postgres-backed gateway durability.
+
+### Minimal
+
+Ontology read/write and governance only—no external connectors.
+
+| Component | Included |
+|-----------|----------|
+| Postgres + gateway | Yes |
+| Go ingest / Rust shim | No |
+| External connectors | No |
+| OTel / Neo4j / Helm | Optional |
+
+Typical env: `DAEMON_POSTGRES_URL`, `DAEMON_AUTH_MODE`, foundation pack loaded.
+
+### Standard
+
+Scheduled ingest, lakehouse bronze, ops visibility—typical forward-deploy scope.
+
+| Component | Included |
+|-----------|----------|
+| Minimal + Go ingest | Yes |
+| Ingest schedules | 60s poll in `prod.yaml` |
+| Lakehouse export | `DAEMON_LAKEHOUSE_EXPORT_PATH` |
+| OTel + metrics | `compose.prod.yaml` collector; `GET /metrics` |
+| Staging smoke | `pnpm run staging:smoke` |
+
+Set `DAEMON_STAGING_SMOKE_REQUIRE_GATEWAY=1` when the gateway must answer during smoke.
+
+### Full
+
+Connector catalog, graph profile, agent worker, Kubernetes—parity matrix Apollo and Foundry-DC rows.
+
+| Component | Included |
+|-----------|----------|
+| Standard + S3/Kafka/HTTP/Postgres connectors | `pnpm run check:sources` |
+| Neo4j | `docker compose --profile graph` |
+| Agent worker + Helm | `deployment/helm/daemon-platform/` |
+| Golden + DSDK smoke | Integration tests with `DAEMON_POSTGRES_URL` |
+
+## Go-live sequence
+
+<Steps>
+  <Step title="Start infrastructure">
+    ```bash
+    export POSTGRES_PASSWORD='<strong-secret>'
+    docker compose -f deployment/docker/compose.prod.yaml up -d
+    # Optional graph: --profile graph
+    ```
+    Set `DATABASE_URL`, `DAEMON_POSTGRES_URL`, `REDIS_URL`, `NATS_URL` for app processes per `configs/environments/prod.yaml`.
+  </Step>
+  <Step title="Migrate database">
+    ```bash
+    export DAEMON_POSTGRES_URL='postgresql://daemon:<password>@<host>:5432/daemon?sslmode=require'
+    pnpm run db:migrate
+    ```
+  </Step>
+  <Step title="Deploy gateway and ingest">
+    **Host:** gateway `:3000`, ingest `:8081`, semantic shim `:8082` if search is on. See [Deployment](/operations/deployment).
+
+    **Kubernetes:** install `deployment/helm/daemon-platform/` with secrets and service URLs.
+  </Step>
+  <Step title="Promote ontology packs">
+    Validate foundation pack; promote extension packs via governance (`validate-change`, `promote`). UAT on `GET /v1/read` and writes before traffic.
+  </Step>
+  <Step title="Wire connectors and schedules">
+    Register sources per [Connectors catalog](/data/connectors-catalog). Configure cron schedules. Run `pnpm run check:sources`. Confirm `GET /v1/ops/health`.
+  </Step>
+  <Step title="Run smoke and parity gates">
+    ```bash
+    export DAEMON_GATEWAY_URL='https://<gateway-host>'
+    pnpm run staging:smoke
+    pnpm run check:parity-matrix
+    export DAEMON_INTEGRATION_REQUIRED=1
+    pnpm exec vitest run tests/integration/foundry-parity-golden.integration.test.ts
+    pnpm exec vitest run tests/integration/dsdk-production-smoke.integration.test.ts
+    ```
+  </Step>
+  <Step title="Enable observability">
+    Set `OTEL_EXPORTER_OTLP_ENDPOINT`, dashboards, and alerts per [Observability runbook](/operations/observability-runbook).
+  </Step>
+</Steps>
+
+## Per-domain checklist
+
+| Step | Action |
+|------|--------|
+| Pack | Extension promoted; `domain_id` consistent with RLS. |
+| Entities | Object types in pack; UAT entities registered. |
+| Connectors | Credentials scoped; test ingest run succeeds. |
+| Lakehouse | Bronze events for domain; export path writable if needed. |
+| Search | Hybrid index if `semantic-vector-index` propagation is on. |
+| Actions | Agents/workflows tested with prod `DAEMON_AUTH_MODE`. |
+| Parity | Live rows in [Product parity](/platform/product-parity) match what you wired. |
+
+Platform maps: [Data integration](/platform/data-integration-map), [Data connection](/platform/data-connection-map), [Data Ops lifecycle](/platform/data-ops-lifecycle).
+
+## Post-go-live
+
+| Topic | Page |
+|-------|------|
+| Metrics and alerts | [Observability runbook](/operations/observability-runbook) |
+| Security and audit | [Security governance](/operations/security-governance) |
+| Health | `GET /health`, `GET /v1/ops/health` |
+
+## Limits (read before promising scope)
+
+- **Parity ≠ turnkey SaaS:** The matrix documents repo-proven capabilities; customers still model ontology, wire connectors, and run UAT per vertical.
+- **Auth:** API keys in gateway paths—not customer IdP/SSO program delivery.
+- **Planned gaps:** Marketplace connectors, private link, full Workshop—see [Data connection map](/platform/data-connection-map).
+- **Multi-tenant SaaS:** This guide is one environment/tenant; shared infra needs extra RLS and secrets review.
+
+Authoritative source: `docs/20-deployment-go-live-guide.md` in the repository.

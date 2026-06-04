@@ -15,6 +15,7 @@
     "./tenancy/domain-catalog.js": "./dist/tenancy/domain-catalog.js",
     "./governance/ontology-governance.js": "./dist/governance/ontology-governance.js",
     "./store/create-ontology-store.js": "./dist/store/create-ontology-store.js",
+    "./store/durable-ontology-store": "./dist/store/durable-ontology-store.js",
     "./store/durable-ontology-store.js": "./dist/store/durable-ontology-store.js",
     "./store/replay-into.js": "./dist/store/replay-into.js",
     "./store/resolve-registry.js": "./dist/store/resolve-registry.js",
@@ -28,7 +29,11 @@
     "./packs/merge-packs.js": "./dist/packs/merge-packs.js",
     "./graph-schema/pack-graph-schema.js": "./dist/graph-schema/pack-graph-schema.js",
     "./graph-sync/neo4j-graph-sync.js": "./dist/graph-sync/neo4j-graph-sync.js",
-    "./graph-sync/neo4j-backfill.js": "./dist/graph-sync/neo4j-backfill.js"
+    "./graph-sync/neo4j-backfill.js": "./dist/graph-sync/neo4j-backfill.js",
+    "./search/scoped-ontology-search.js": "./dist/search/scoped-ontology-search.js",
+    "./search/replay-search-index.js": "./dist/search/replay-search-index.js",
+    "./vector-layer/create-embedder-from-env.js": "./dist/vector-layer/create-embedder-from-env.js",
+    "./vector-layer/text-embedder.js": "./dist/vector-layer/text-embedder.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

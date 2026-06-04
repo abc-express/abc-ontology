@@ -1,0 +1,90 @@
+---
+title: "Quickstart"
+description: "Install dependencies, start the local stack, and call the gateway API."
+---
+
+Get the NestJS gateway running on port 3000 with Docker-backed services. This is the fastest path to a working dev loop.
+
+## Prerequisites
+
+- **Node.js** 20+ (LTS recommended)
+- **pnpm** (repo package manager)
+- **Docker** (for `pnpm run dev:up`)
+- Optional: Go and Rust toolchains for full-repo tests
+
+## Install and start
+
+<Steps>
+  <Step title="Clone and install">
+    ```bash
+    git clone https://github.com/daemon-blockint-tech/DAEMON.git
+    cd DAEMON
+    cp .env.example .env   # optional; defaults work for local dev
+    pnpm install
+    ```
+  </Step>
+  <Step title="Start dependencies">
+    ```bash
+    pnpm run dev:up
+    ```
+    Brings up docker compose and builds required deps.
+  </Step>
+  <Step title="Run the gateway">
+    ```bash
+    pnpm run dev:gateway
+    ```
+    NestJS API listens on `http://localhost:3000` (dev mode may skip some upstream Go services).
+  </Step>
+</Steps>
+
+## Smoke test the API
+
+Use header `x-api-key: daemon-dev-key` (see `.env.example`).
+
+**Register an entity via ingest:**
+
+```bash
+curl -sS -X POST http://localhost:3000/v1/ingest/records \
+  -H 'content-type: application/json' \
+  -H 'x-api-key: daemon-dev-key' \
+  -d '{"ontologyId":"default","entityId":"my-entity","payload":{"name":"demo"}}'
+```
+
+**Run an automation against that entity:**
+
+```bash
+curl -sS -X POST http://localhost:3000/v1/automations/run \
+  -H 'content-type: application/json' \
+  -H 'x-api-key: daemon-dev-key' \
+  -d '{"ontologyId":"default","entityId":"my-entity","automationId":"echo"}'
+```
+
+## Other useful commands
+
+```bash
+pnpm run build
+pnpm run test
+pnpm run test:repo     # full repo tests when DAEMON_INTEGRATION_REQUIRED=1
+go work sync && go test ./collect-sensing/...
+cargo test --workspace
+```
+
+## Preview documentation locally
+
+Mintlify CLI does not run on Node 25+. Use Node 22 (repo root has `.nvmrc`):
+
+```bash
+nvm use          # or: nvm use 22
+cd mintlify
+npx mint dev
+```
+
+Open `http://localhost:3000` for the docs preview (Mintlify dev server — not the API gateway).
+
+<Tip>
+  If `mint dev` fails with **client version none**, allowlist `releases.mintlify.com` on your network.
+</Tip>
+
+<Warning>
+  If you see `mintlify is not supported on node versions 25+`, run `node -v` — it must be 22.x before `npx mint dev`.
+</Warning>

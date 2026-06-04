@@ -1,0 +1,33 @@
+---
+title: "Ontology competency questions"
+description: "NL graph query expectations for foundation and logistics-commercial domains."
+---
+
+These questions define what `POST /v1/query/ask` must support in v1. Each maps to Cypher over the Neo4j read model ([Neo4j graph model](/data/neo4j-graph)).
+
+## Scope
+
+- **Foundation** — pack `foundation` only
+- **Logistics** — `foundation` + extension `logistics-commercial` when `domainId=logistics`
+- Tenancy: answers scoped to caller `tenantId` and `domainId`
+- Execution: read-only Cypher with row limits and timeouts
+
+NL query on `domainId=foundation` must not answer logistics-only entity types.
+
+## Foundation (sample)
+
+| ID | Question | Pattern |
+|----|----------|---------|
+| CQ-01 | Which parties are linked to case `{caseId}`? | `Case` → `LINK` → `Party` |
+| CQ-02 | What entities are directly linked to `{entityId}`? | 1-hop `LINK` |
+| CQ-04 | List cases with status `{status}` | Filter `Case.status` |
+
+## Logistics-commercial (P0)
+
+| ID | Question | Pattern |
+|----|----------|---------|
+| LQ-01 | Which Account has id `{accountId}`? | `Entity:Account` |
+| LQ-03 | What Shipments belong to order `{orderId}`? | `Order` → `LINK` → `Shipment` |
+| LQ-06 | List shipments with status `{status}` | Filter `Shipment` |
+
+Full tables and negative competency rules: `docs/09-ontology-competency-questions.md`.

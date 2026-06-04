@@ -1,9 +1,13 @@
 import { Injectable } from "@nestjs/common";
 import { DaemonError, ErrorCodes } from "@daemon/platform-types";
-import { SourceCatalog } from "@daemon/collect-sensing/orchestrator/source-catalog";
+import {
+  SourceCatalog,
+  type SourceConnectorConfig,
+} from "@daemon/collect-sensing/orchestrator/source-catalog";
 import { createConnectorForSource } from "@daemon/collect-sensing/connectors/connector-factory";
 import { RecordNormalizer } from "@daemon/collect-sensing/normalization/record-normalizer";
 import type { EntityPayload } from "@daemon/collect-sensing/normalization/record-normalizer";
+import { StreamPipeline } from "@daemon/collect-sensing/pipelines/stream-pipeline";
 import type { TenantContextHeaders } from "../platform/tenant-context";
 import {
   IngestService,
@@ -14,12 +18,16 @@ import {
 @Injectable()
 export class IngestPipelineService {
   private readonly catalog: SourceCatalog;
+  private readonly stream = new StreamPipeline<IngestRecord>();
 
   constructor(
     private readonly ingest: IngestService,
     env: NodeJS.ProcessEnv = process.env,
   ) {
     this.catalog = SourceCatalog.fromYamlFile();
+    this.stream.on(async () => {
+      /* hot-path hook — propagation subscribers register here in workers */
+    });
     void env;
   }
 
@@ -35,8 +43,14 @@ export class IngestPipelineService {
     sourceId: string,
   ): Promise<IngestResult> {
     const source = this.catalog.require(sourceId);
+    const queryExecutor = await this.resolveQueryExecutor();
     const connector = createConnectorForSource(source, {
-      queryExecutor: await this.resolveQueryExecutor(),
+      queryExecutor,
+      cdcQueryExecutor: queryExecutor
+        ? async (sql, params) => queryExecutor.query(sql, params)
+        : undefined,
+      httpFetch: globalThis.fetch.bind(globalThis),
+      eventSubscription: await this.resolveEventSubscription(source.connector),
     });
     const raw = await connector.fetch();
     const normalizer = new RecordNormalizer({
@@ -47,7 +61,12 @@ export class IngestPipelineService {
       meta: source.normalize.meta,
     });
     const payloads = normalizer.normalizeMany(raw);
-    const records = payloads.map(entityPayloadToIngestRecord);
+    const records: IngestRecord[] = [];
+    for (const payload of payloads) {
+      const record = entityPayloadToIngestRecord(payload);
+      await this.stream.emit(record);
+      records.push(record);
+    }
     if (records.length === 0) {
       throw new DaemonError(
         ErrorCodes.VALIDATION,
@@ -74,6 +93,18 @@ export class IngestPipelineService {
         return result.rows;
       },
     };
+  }
+
+  private async resolveEventSubscription(connector: SourceConnectorConfig) {
+    if (connector.type !== "event-subscriber") return undefined;
+    const natsUrl = process.env.DAEMON_NATS_URL ?? "nats://127.0.0.1:4222";
+    const { createNatsSubscription } = await import(
+      "@daemon/collect-sensing/connectors/event-connectors/nats-subscription"
+    );
+    return createNatsSubscription({
+      servers: natsUrl,
+      subject: connector.subject,
+    });
   }
 }
 

@@ -9,6 +9,12 @@ import {
   AutomationsWorkflows,
   type AutomationLoopInput,
 } from "../automations/automations-workflows.js";
+import { DataHealthProduct } from "../data-health/data-health-product.js";
+import {
+  PipelineRunner,
+  type PipelineDag,
+} from "../pipeline-builder/pipeline-runner.js";
+import { EvalRunner, type EvalSuite } from "../aip-evals/eval-runner.js";
 import { ProductRuntime } from "../shared/product-runtime.js";
 
 export type ProductId =
@@ -16,7 +22,10 @@ export type ProductId =
   | "automations"
   | "customer-gpt"
   | "internal-applications"
-  | "admin-console";
+  | "admin-console"
+  | "data-health"
+  | "pipeline-builder"
+  | "aip-evals";
 
 export type ProductOperation =
   | { product: "analytics-workflows"; op: "search"; query: string; ontologyId?: OntologyId }
@@ -44,7 +53,17 @@ export type ProductOperation =
       loop: AutomationLoopInput;
       approvals: string[];
     }
-  | { product: "automations"; op: "noop" };
+  | { product: "automations"; op: "noop" }
+  | { product: "data-health"; op: "snapshot" }
+  | {
+      product: "pipeline-builder";
+      op: "run";
+      pipelineId: string;
+      dag: PipelineDag;
+      tenantId?: string;
+      domainId?: string;
+    }
+  | { product: "aip-evals"; op: "run"; suite: EvalSuite };
 
 function routerDevSession(): DaemonSession {
   return {
@@ -65,6 +84,9 @@ export class ProductRouter {
   private readonly internalDashboard: DashboardDataService;
   private readonly admin: AdminOperations;
   private readonly automations: AutomationsWorkflows;
+  private readonly dataHealth: DataHealthProduct;
+  private readonly pipelines: PipelineRunner;
+  private readonly evals: EvalRunner;
 
   constructor(runtime: ProductRuntime = new ProductRuntime()) {
     this.analytics = new AnalyticsWorkflows(runtime);
@@ -72,6 +94,9 @@ export class ProductRouter {
     this.internalDashboard = new DashboardDataService(runtime);
     this.admin = new AdminOperations(runtime);
     this.automations = new AutomationsWorkflows(runtime);
+    this.dataHealth = new DataHealthProduct(runtime);
+    this.pipelines = new PipelineRunner(runtime);
+    this.evals = new EvalRunner(runtime);
   }
 
   async dispatch(operation: ProductOperation): Promise<unknown> {
@@ -86,7 +111,7 @@ export class ProductRouter {
         }
         return this.analytics.buildDashboard(operation.ontologyId);
       case "customer-gpt":
-        return this.gpt.converse(operation.turns, []);
+        return this.gpt.converse({ turns: operation.turns });
       case "internal-applications":
         return this.internalDashboard.snapshot(operation.ontologyId);
       case "admin-console":
@@ -106,6 +131,15 @@ export class ProductRouter {
           );
         }
         return this.automations.run(routerDevSession(), [{ id: "noop", action: "ping" }]);
+      case "data-health":
+        return this.dataHealth.snapshot();
+      case "pipeline-builder":
+        return this.pipelines.run(operation.pipelineId, operation.dag, {
+          tenantId: operation.tenantId ?? "default",
+          domainId: operation.domainId ?? "foundation",
+        });
+      case "aip-evals":
+        return this.evals.run(operation.suite);
       default: {
         const _exhaustive: never = operation;
         return _exhaustive;
@@ -185,6 +219,29 @@ export class ProductRouter {
         session: extra.session,
         loop: extra.loop,
         approvals: extra.approvals ?? [],
+      });
+    }
+    if (product === "data-health" && op === "snapshot") {
+      return this.dispatch({ product, op: "snapshot" });
+    }
+    if (product === "pipeline-builder" && op === "run" && extra?.patch) {
+      const dag = extra.patch.dag as PipelineDag | undefined;
+      if (dag) {
+        return this.dispatch({
+          product,
+          op: "run",
+          pipelineId: String(extra.patch.pipelineId ?? "default"),
+          dag,
+          tenantId: extra.patch.tenantId as string | undefined,
+          domainId: extra.patch.domainId as string | undefined,
+        });
+      }
+    }
+    if (product === "aip-evals" && op === "run" && extra?.patch?.suite) {
+      return this.dispatch({
+        product,
+        op: "run",
+        suite: extra.patch.suite as EvalSuite,
       });
     }
     throw new Error(`unknown operation ${product}/${op}`);

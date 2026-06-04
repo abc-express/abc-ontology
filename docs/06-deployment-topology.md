@@ -61,3 +61,7 @@ Manifests under `deployment/kubernetes/` deploy each service with health probes.
 ## CI
 
 CI runs fast `build` and unit `test` jobs plus an `integration` job that starts the compose stack, waits for health, and runs `pnpm run test:repo` against real services.
+
+Connectivity patterns (cloud pull vs agent-style ingest) and SDK configuration: [15-data-connection-map.md](./15-data-connection-map.md), [13-sdk.md](./13-sdk.md).
+
+For production cutover (profiles, migrations, smoke, per-domain checklist): [20-deployment-go-live-guide.md](./20-deployment-go-live-guide.md).

@@ -68,6 +68,10 @@ Ingest must run before automations; otherwise the read path returns `404` with `
 
 ## Documentation
 
+**Published site (Mintlify):** run `nvm use` (Node 22 per `.nvmrc`), then `cd mintlify && npx mint dev` → http://localhost:3000. Deploy path in the Mintlify dashboard: `/mintlify`. See [mintlify/README.md](mintlify/README.md).
+
+**Engineering Markdown** (`docs/`):
+
 - [Overview](docs/00-overview.md)
 - [Bounded contexts](docs/02-bounded-contexts.md)
 - [End-to-end architecture](docs/01-end-to-end-architecture.md)

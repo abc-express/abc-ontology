@@ -58,6 +58,23 @@ test("openapi document is served", async () => {
       .map((p) => p.$ref);
     assert.ok(refs.includes("#/components/parameters/DaemonTenantHeader"));
     assert.ok(refs.includes("#/components/parameters/DaemonDomainHeader"));
+
+    const requiredPaths = [
+      "/v1/read/entities",
+      "/v1/read/entities/{entityId}",
+      "/v1/search",
+      "/v1/lakehouse/summary",
+      "/v1/lakehouse/events",
+      "/v1/ingest/jobs",
+      "/v1/ingest/records",
+      "/v1/query/ask",
+      "/v1/products/customer-gpt/chat",
+      "/v1/policy/check",
+      "/v1/automations/run",
+    ];
+    for (const p of requiredPaths) {
+      assert.ok(doc.paths?.[p], `missing OpenAPI path ${p}`);
+    }
   });
 });
 

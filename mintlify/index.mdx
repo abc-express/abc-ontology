@@ -1,0 +1,48 @@
+---
+title: "Introduction"
+description: "DAEMON SDK — semantic control plane for ingest, ontology, governed reads and writes, and action runtime."
+---
+
+DAEMON SDK implements a **semantic control plane**: ingest external data, model it in an ontology, serve reads and governed writes to humans and agents, and execute workflows with security and audit across the stack.
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Run the NestJS gateway locally with Docker-backed dependencies in minutes.
+  </Card>
+  <Card title="Architecture overview" icon="sitemap" href="/architecture/overview">
+    Bounded contexts, milestones, and how the monorepo is organized.
+  </Card>
+  <Card title="Author with Mintlify MCP" icon="sparkles" href="/guides/using-mintlify-mcp">
+    Use Mintlify MCP in Cursor to search docs standards and edit the site via PR.
+  </Card>
+  <Card title="End-to-end diagram" icon="diagram-project" href="/architecture/end-to-end">
+    Collect → ontology → read/write loops → action runtime → gateway.
+  </Card>
+  <Card title="Go live" icon="circle-check" href="/operations/go-live">
+    Cut a single environment over to production with profiles, smoke tests, and domain checklists.
+  </Card>
+  <Card title="Product parity matrix" icon="table" href="/platform/product-parity">
+    What is live in the repo versus what still needs customer wiring.
+  </Card>
+</CardGroup>
+
+## What you get
+
+| Capability | Where it lives |
+|------------|----------------|
+| Ingest and normalize | `collect-sensing` (Go) |
+| Ontology registry, graph, vectors | `ontology` (Go + Rust) |
+| Reads, writes, approvals | `read-write-loops` (TypeScript) |
+| Workflows and agents | `action-runtime` (TypeScript) |
+| HTTP API | NestJS `api/gateway` |
+| Policy and audit | `security-governance` |
+
+## Quality bar
+
+- TypeScript, Go, and Rust implementations — no stub handlers in integration paths.
+- Integration and e2e tests use **testcontainers** / docker-compose — not mocked upstreams.
+- Publishable packages: `@daemon/platform-types`, `@daemon/sdk`, `@daemon/cli`.
+
+<Note>
+  Internal client definition and reference extracts live under `docs/private/` in the repository. They are **not** part of this published Mintlify site.
+</Note>

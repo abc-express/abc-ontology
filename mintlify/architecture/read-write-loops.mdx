@@ -1,0 +1,46 @@
+---
+title: "Read-write loops"
+description: "Read → policy → write → external-write orchestration, projections, and concurrency."
+---
+
+Read-write loops coordinate the lifecycle of a request from read through policy, write, and optional external write.
+
+```mermaid
+sequenceDiagram
+  participant Client
+  participant Loop as LoopOrchestrator
+  participant Read as ReadRouter
+  participant Policy as PolicyEngine
+  participant Write as CommandGateway
+  participant Ext as ExternalWrites
+
+  Client->>Loop: request
+  Loop->>Read: resolve current state
+  Loop->>Policy: evaluate decision
+  alt allowed
+    Loop->>Write: validate + mutate
+    Write->>Loop: commit record
+    opt external effect
+      Loop->>Ext: dispatch external write
+    end
+  else denied
+    Loop->>Client: POLICY_DENIED
+  end
+```
+
+## Components
+
+| Component | Role |
+|-----------|------|
+| `ReadRouter` | Resolves entities from registry; optional projection when `DAEMON_READ_FROM_PROJECTION=1` |
+| `read-parity` | Dual-read comparison when `DAEMON_READ_PARITY_CHECK=1`; metrics on `GET /metrics` |
+| `CommandGateway` | Mutation entry point |
+| `MutationValidator` | Validates against ontology models |
+| `ConflictResolver` | `reject`, `last-write-wins`, or `merge` under optimistic concurrency |
+| `LoopOrchestrator` | State machine, approval gates, escalation |
+
+## Concurrency
+
+Optimistic concurrency: version mismatch → `ErrorCodes.CONFLICT`; strategy from `ConflictResolver`.
+
+Source: `docs/03-read-write-loops.md`.

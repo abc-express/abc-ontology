@@ -9,10 +9,16 @@
     "./analytics-workflows/query-wizard.js": "./dist/analytics-workflows/query-wizard.js",
     "./analytics-workflows/report-generator.js": "./dist/analytics-workflows/report-generator.js",
     "./analytics-workflows/dashboard-builder.js": "./dist/analytics-workflows/dashboard-builder.js",
+    "./analytics-workflows/lakehouse-analytics.js": "./dist/analytics-workflows/lakehouse-analytics.js",
     "./product-shell/product-router.js": "./dist/product-shell/product-router.js",
     "./automations/automations-workflows.js": "./dist/automations/automations-workflows.js",
     "./automations/task-orchestrator.js": "./dist/automations/task-orchestrator.js",
-    "./automations/approval-runner.js": "./dist/automations/approval-runner.js"
+    "./automations/approval-runner.js": "./dist/automations/approval-runner.js",
+    "./customer-gpt/gpt-orchestrator.js": "./dist/customer-gpt/gpt-orchestrator.js",
+    "./ontology-query/llm.js": "./dist/ontology-query/llm.js",
+    "./pipeline-builder/pipeline-runner.js": "./dist/pipeline-builder/pipeline-runner.js",
+    "./aip-evals/eval-runner.js": "./dist/aip-evals/eval-runner.js",
+    "./data-health/data-health-product.js": "./dist/data-health/data-health-product.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -24,7 +30,9 @@
     "@daemon/ontology": "workspace:*",
     "@daemon/platform-types": "workspace:*",
     "@daemon/read-write-loops": "workspace:*",
-    "@daemon/security-governance": "workspace:*"
+    "@daemon/security-governance": "workspace:*",
+    "@langchain/core": "^1.0.0",
+    "@langchain/openrouter": "^0.3.0"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

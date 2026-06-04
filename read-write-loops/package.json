@@ -8,6 +8,8 @@
     "./reads/read-parity.js": "./dist/reads/read-parity.js",
     "./reads/read-parity-metrics.js": "./dist/reads/read-parity-metrics.js",
     "./writes/command-gateway.js": "./dist/writes/command-gateway.js",
+    "./writes/logic-engine-client.js": "./dist/writes/logic-engine-client.js",
+    "./writes/write-logic-guard.js": "./dist/writes/write-logic-guard.js",
     "./loop-controller/loop-orchestrator.js": "./dist/loop-controller/loop-orchestrator.js",
     "./loop-controller/approval-gates.js": "./dist/loop-controller/approval-gates.js"
   },

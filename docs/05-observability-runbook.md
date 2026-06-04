@@ -1,0 +1,55 @@
+# Observability runbook (production)
+
+Operational guide for metrics, traces, and alerts when running daemon-sdk in production.
+
+## Stack
+
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| OTel Collector | `deployment/docker/compose.prod.yaml` → `otel-collector` | Receives OTLP from gateway |
+| Gateway metrics | `GET /metrics` (when enabled) | Request counters, ingest/lakehouse hooks |
+| Config | `configs/environments/prod.yaml` → `observability` | Log level, metrics toggle |
+
+## Environment variables (gateway)
+
+| Variable | Description |
+|----------|-------------|
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | e.g. `http://otel-collector:4318` |
+| `OTEL_SERVICE_NAME` | Default `daemon-api-gateway` |
+| `DAEMON_METRICS_ENABLED` | `1` to expose Prometheus-style metrics |
+
+## Grafana dashboards (import)
+
+1. Import JSON from `observability/dashboards/daemon-platform-overview.json` (if present) or build panels from:
+   - Ingest job success rate (`daemon_ingest_jobs_total`)
+   - Lakehouse bronze row lag (time since last `refreshed_at` on `daemon_dataset_catalog`)
+   - Schedule failures (`daemon_ingest_schedules.last_status = failed`)
+2. Datasource: Prometheus or OTLP metrics backend fed by the collector.
+
+## Example alert rules
+
+| Alert | Condition | Action |
+|-------|-----------|--------|
+| IngestScheduleFailed | Any schedule `last_status=failed` in 15m | Page on-call; check source connector logs |
+| LakehouseStale | `daemon_dataset_catalog.refreshed_at` older than 24h for prod tenant | Trigger export or source run |
+| GatewayDown | `/health` non-200 for 2m | Restart deployment; check Postgres |
+| Neo4jSyncLag | Optional graph sync errors in logs | Verify `DAEMON_NEO4J_URI` and credentials |
+
+## SIEM / audit
+
+Audit events flow through governance modules documented in [05-security-governance.md](./05-security-governance.md). Forward gateway structured logs to your SIEM; webhook signing for ingest uses `DAEMON_WEBHOOK_HMAC_SECRET`.
+
+## Neo4j (optional profile)
+
+Enable graph query with compose profile `graph` and:
+
+```bash
+DAEMON_ONTOLOGY_QUERY_ENABLED=1
+DAEMON_NEO4J_URI=bolt://neo4j:7687
+DAEMON_NEO4J_USER=neo4j
+DAEMON_NEO4J_PASSWORD=<from NEO4J_AUTH>
+```
+
+See [10-neo4j-graph-model.md](./10-neo4j-graph-model.md).
+
+Go-live ordering (when to enable OTel and alerts): [20-deployment-go-live-guide.md](./20-deployment-go-live-guide.md).

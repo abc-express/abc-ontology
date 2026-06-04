@@ -1,0 +1,35 @@
+---
+title: "Connectors catalog"
+description: "Supported ingest connector types, validation, and gateway ingest path."
+---
+
+## Supported types (v1)
+
+| Type | Module | Notes |
+|------|--------|-------|
+| `file` | `file-connectors` | JSONL/CSV from repo-relative paths |
+| `http-pull` | `api-connectors` | REST fetch |
+| `postgres-read` | `db-connectors` | SQL via `DAEMON_POSTGRES_URL` |
+| `event-subscriber` | `event-connectors` | Subscription injection in tests |
+
+Metadata: `configs/collect-sensing/connectors-catalog.yaml`. Source instances: `configs/collect-sensing/sources.yaml`.
+
+## Validation
+
+```bash
+pnpm run check:sources
+```
+
+## Ingest path
+
+Gateway `IngestPipelineService` builds connectors via `createConnectorForSource` with `queryExecutor` (Postgres) and `httpFetch` for `http-pull`.
+
+Run a catalog source:
+
+```http
+POST /v1/ingest/sources/:sourceId/run
+```
+
+Include `X-Daemon-Tenant` and `X-Daemon-Domain` headers.
+
+Deferred: S3, Kafka, and enterprise ERP connectors until factory support exists.

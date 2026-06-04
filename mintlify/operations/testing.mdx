@@ -1,0 +1,38 @@
+---
+title: "Testing"
+description: "Test suites, local integration stack, and how to run repo tests without mocks in integration paths."
+---
+
+| Suite | Location | Approach |
+|-------|----------|----------|
+| Unit | package `*.test.ts`, Go `*_test.go`, Rust `#[test]` | In-process, no mocks for domain logic |
+| Contract | `tests/contract/` | OpenAPI shape vs gateway |
+| Integration | `tests/integration/` | docker-compose services |
+| Policy | `tests/policy/` | YAML fixtures + Rust `PolicyEngine` |
+| Ontology | `tests/ontology/` | Registry round-trip |
+| E2E | `tests/e2e/` | ingest → read → write path |
+
+Integration and e2e do **not** use `jest.mock` or in-memory fake databases unless `DAEMON_USE_EMBEDDED=1` for local-only dev.
+
+## Local integration stack
+
+```bash
+pnpm run dev:up
+export DAEMON_REDIS_URL=redis://127.0.0.1:6379
+export DAEMON_INTEGRATION_REQUIRED=1
+DAEMON_POSTGRES_URL=postgresql://daemon:daemon@127.0.0.1:5432/daemon pnpm run db:migrate
+export DAEMON_POSTGRES_URL=postgresql://daemon_app:daemon_app@127.0.0.1:5432/daemon
+pnpm run test:repo
+```
+
+<Note>
+  Gateway HTTP integration tests may use in-memory ontology unless you pass `DAEMON_POSTGRES_URL` explicitly. Full-chain e2e runs when `DAEMON_INTEGRATION_REQUIRED=1`.
+</Note>
+
+For source-run without upstream Go:
+
+```bash
+export DAEMON_INGEST_SKIP_UPSTREAM=1
+```
+
+See the full guide in the repository: `docs/06-testing.md`.

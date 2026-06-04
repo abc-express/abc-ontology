@@ -8,8 +8,15 @@
   "exports": {
     ".": "./dist/orchestrator/ingestion-orchestrator.js",
     "./orchestrator/source-catalog": "./dist/orchestrator/source-catalog.js",
+    "./orchestrator/source-catalog.js": "./dist/orchestrator/source-catalog.js",
     "./connectors/connector-factory": "./dist/connectors/connector-factory.js",
+    "./connectors/connector-factory.js": "./dist/connectors/connector-factory.js",
+    "./connectors/event-connectors/nats-subscription": "./dist/connectors/event-connectors/nats-subscription.js",
+    "./connectors/event-connectors/nats-subscription.js": "./dist/connectors/event-connectors/nats-subscription.js",
     "./normalization/record-normalizer": "./dist/normalization/record-normalizer.js",
+    "./normalization/record-normalizer.js": "./dist/normalization/record-normalizer.js",
+    "./pipelines/stream-pipeline": "./dist/pipelines/stream-pipeline.js",
+    "./pipelines/stream-pipeline.js": "./dist/pipelines/stream-pipeline.js",
     "./paths": "./dist/paths.js"
   },
   "scripts": {
@@ -18,7 +25,10 @@
     "lint": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.750.0",
     "@daemon/platform-types": "workspace:*",
+    "kafkajs": "^2.2.4",
+    "nats": "^2.28.2",
     "yaml": "^2.6.1"
   },
   "devDependencies": {

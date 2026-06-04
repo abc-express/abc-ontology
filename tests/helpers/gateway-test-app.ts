@@ -45,3 +45,16 @@ export async function createGatewayTestApp(
 }
 
 export const DEV_API_KEY = "daemon-dev-key";
+
+/** Tenant/domain headers expected by {@link TenantContextService}. */
+export function daemonTenantHeaders(
+  tenantId = "inst-alpha",
+  domainId = "foundation",
+  extra: Record<string, string> = {},
+): Record<string, string> {
+  return {
+    "x-daemon-tenant": tenantId,
+    "x-daemon-domain": domainId,
+    ...extra,
+  };
+}

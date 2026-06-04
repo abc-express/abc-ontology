@@ -4,6 +4,11 @@ import { mergeOntologyPacks } from "./merge-packs.js";
 import type { DomainCatalog } from "../tenancy/domain-catalog.js";
 import type { TenantDefinition } from "../tenancy/tenant-registry.js";
 
+export interface PackResolveOptions {
+  packBranch?: string;
+  environment?: string;
+}
+
 export interface ResolvedPack {
   ontologyId: string;
   entityTypes: string[];
@@ -11,6 +16,8 @@ export interface ResolvedPack {
   relations: LoadedOntologyPack["relations"];
   junctions: LoadedOntologyPack["junctions"];
   packVersion: string;
+  packBranch: string;
+  environment: string;
 }
 
 /**
@@ -35,20 +42,38 @@ export class PackResolver {
     return mergeOntologyPacks(this.foundation, extension);
   }
 
-  resolve(tenant: TenantDefinition, domainId: string): ResolvedPack {
+  resolve(
+    tenant: TenantDefinition,
+    domainId: string,
+    options: PackResolveOptions = {},
+  ): ResolvedPack {
     if (!tenant.enabledDomains.includes(domainId)) {
       throw new Error(
         `domain ${domainId} not enabled for tenant ${tenant.id}`,
       );
     }
+    const domain = this.domains?.get(domainId);
+    const packBranch =
+      options.packBranch ??
+      process.env.DAEMON_PACK_BRANCH ??
+      domain?.packBranch ??
+      "main";
+    const environment =
+      options.environment ??
+      process.env.DAEMON_PACK_ENVIRONMENT ??
+      "production";
     const compiled = this.compiledPack(domainId);
+    const baseVersion = compiled.manifest.version;
     return {
       ontologyId: compiled.manifest.ontologyId,
       entityTypes: [...compiled.manifest.entityTypes],
       models: new Map(compiled.models),
       relations: new Map(compiled.relations),
       junctions: new Map(compiled.junctions),
-      packVersion: compiled.manifest.version,
+      packVersion:
+        packBranch === "main" ? baseVersion : `${baseVersion}+${packBranch}`,
+      packBranch,
+      environment,
     };
   }
 }

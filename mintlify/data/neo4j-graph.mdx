@@ -1,0 +1,31 @@
+---
+title: "Neo4j graph model"
+description: "Operational graph projection for natural-language queries; pack YAML remains SSOT."
+---
+
+Operational read model for natural-language graph queries. **SSOT** remains pack YAML; Neo4j is synced from Postgres and the write path. Extension domains (e.g. `logistics`) add entity type labels at sync and NL-query time via `PackResolver`.
+
+## Node model
+
+| Element | Description |
+|---------|-------------|
+| Primary label | `Entity` — all ontology entities |
+| Type label | Per `entityType` from resolved pack for the domain |
+| Identity | `tenantId`, `domainId`, `ontologyId`, `entityId` |
+| Properties | `entityType`, `version`, `updatedAt`, pack fields |
+
+Example constraint:
+
+```cypher
+CREATE CONSTRAINT entity_scope_key IF NOT EXISTS
+FOR (n:Entity)
+REQUIRE (n.tenantId, n.domainId, n.ontologyId, n.entityId) IS NODE KEY;
+```
+
+## Relationships
+
+| Type | Description |
+|------|-------------|
+| `LINK` | Directed link between two entities |
+
+Propagation target `neo4j-graph-sync` updates the graph on register/patch. Full Cypher patterns and backfill: `docs/10-neo4j-graph-model.md`.

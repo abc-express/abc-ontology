@@ -40,17 +40,25 @@ rules:
     propagate:
       - read-model-projection
       - neo4j-graph-sync
+      - semantic-vector-index
+      - lakehouse-bronze
+      - lakehouse-silver
   - id: default-patch
     trigger: patch
     propagate:
       - read-model-projection
       - audit-loop
       - neo4j-graph-sync
+      - semantic-vector-index
+      - lakehouse-bronze
+      - lakehouse-silver
   - id: logistics-entity-register
     trigger: register
     entityTypes:
       - Account
       - Contact
+      - Opportunity
+      - Conversation
       - Order
       - Shipment
       - TTK
@@ -63,6 +71,8 @@ rules:
     entityTypes:
       - Account
       - Contact
+      - Opportunity
+      - Conversation
       - Order
       - Shipment
       - TTK

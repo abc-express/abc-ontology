@@ -16,6 +16,16 @@ services:
 observability:
   logLevel: warn
   metrics: true
+  otelEndpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+neo4j:
+  enabled: ${DAEMON_ONTOLOGY_QUERY_ENABLED:-0}
+  uri: ${DAEMON_NEO4J_URI}
+  user: ${DAEMON_NEO4J_USER:-neo4j}
 security:
   enforceAuth: true
   requireTls: true
+ingest:
+  webhookHmacSecret: ${DAEMON_WEBHOOK_HMAC_SECRET}
+  schedulePollSeconds: 60
+lakehouse:
+  exportBasePath: ${DAEMON_LAKEHOUSE_EXPORT_PATH:-/var/daemon/exports}

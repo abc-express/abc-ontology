@@ -1,0 +1,53 @@
+---
+title: "Sequence flows"
+description: "Ingest, read, write, propagation, and NL query sequences across gateway and stores."
+---
+
+## Ingest → ontology
+
+```mermaid
+sequenceDiagram
+  participant Src as DataSource
+  participant CS as CollectSensing
+  participant Ont as OntologyRegistry
+  Src->>CS: raw event
+  CS->>CS: normalize
+  CS->>Ont: canonical entity upsert
+```
+
+## Read path
+
+```mermaid
+sequenceDiagram
+  participant Client
+  participant GW as NestGateway
+  participant TC as TenantContext
+  participant RT as DaemonRuntime
+  participant RR as ReadRouter
+  participant Ont as OntologyStore
+  Client->>GW: GET /v1/read/entities/:id
+  GW->>TC: resolve X-Daemon-Tenant/Domain
+  GW->>RT: getEntity
+  RT->>RR: route scoped
+  RR->>Ont: get
+  Ont-->>Client: entity JSON
+```
+
+## Write path
+
+```mermaid
+sequenceDiagram
+  participant Client
+  participant GW as NestGateway
+  participant RT as DaemonRuntime
+  participant LOOP as LoopOrchestrator
+  participant Ont as OntologyStore
+  participant AUD as AuditPort
+  Client->>GW: POST /v1/write
+  GW->>RT: runWriteLoop
+  RT->>LOOP: execute
+  LOOP->>Ont: mutate
+  LOOP->>AUD: record
+```
+
+Additional flows (propagation, Neo4j sync, NL query): see `docs/07-sequence-flows.md`.

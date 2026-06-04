@@ -1,0 +1,61 @@
+---
+title: "Engineering docs index"
+description: "Map from repository Markdown under docs/ to this Mintlify site and private vault."
+---
+
+Public engineering documentation lives in two places:
+
+| Location | Audience | Deploy |
+|----------|----------|--------|
+| [`docs/`](https://github.com/daemon-blockint-tech/DAEMON/tree/main/docs) | Contributors, CI references | Git only |
+| [`mintlify/`](https://github.com/daemon-blockint-tech/DAEMON/tree/main/mintlify) | Published docs site | Mintlify (`/mintlify`) |
+
+## Public Markdown → Mintlify
+
+| Source (`docs/`) | Mintlify path |
+|------------------|---------------|
+| `00-overview.md` | [/architecture/overview](/architecture/overview) |
+| `01-end-to-end-architecture.md` | [/architecture/end-to-end](/architecture/end-to-end) |
+| `02-bounded-contexts.md` | [/architecture/bounded-contexts](/architecture/bounded-contexts) |
+| `02-ontology-system.md` | [/architecture/ontology-system](/architecture/ontology-system) |
+| `03-read-write-loops.md` | [/architecture/read-write-loops](/architecture/read-write-loops) |
+| `03-language-engine.md` | [/architecture/language-engine](/architecture/language-engine) |
+| `04-language-engine-toolchain.md` | (merged into language-engine) |
+| `05-security-governance.md` | [/operations/security-governance](/operations/security-governance) |
+| `05-observability.md` | [/operations/observability](/operations/observability) |
+| `06-testing.md` | [/operations/testing](/operations/testing) |
+| `06-deployment-topology.md` | [/operations/deployment](/operations/deployment) |
+| `04-deployment.md` | (summary in deployment page) |
+| `07-sequence-flows.md` | [/architecture/sequence-flows](/architecture/sequence-flows) |
+| `08-semantic-governance-alignment.md` | [/semantics/governance-alignment](/semantics/governance-alignment) |
+| `09-ontology-competency-questions.md` | [/semantics/competency-questions](/semantics/competency-questions) |
+| `10-neo4j-graph-model.md` | [/data/neo4j-graph](/data/neo4j-graph) |
+| `11-data-platform-lakehouse.md` | [/data/lakehouse](/data/lakehouse) |
+| `12-connectors-catalog.md` | [/data/connectors-catalog](/data/connectors-catalog) |
+| `13-sdk.md` | [/guides/sdk](/guides/sdk) |
+| `14-data-integration-map.md` | [/platform/data-integration-map](/platform/data-integration-map) |
+| `15-data-connection-map.md` | [/platform/data-connection-map](/platform/data-connection-map) |
+| `16-data-ops-lifecycle-map.md` | [/platform/data-ops-lifecycle](/platform/data-ops-lifecycle) |
+| `17-platform-decision-map.md` | [/platform/platform-decision-map](/platform/platform-decision-map) |
+| `18-enterprise-platform-map.md` | [/platform/enterprise-platform-map](/platform/enterprise-platform-map) |
+| `19-product-parity-matrix.md` | [/platform/product-parity](/platform/product-parity) |
+| `20-deployment-go-live-guide.md` | [/operations/go-live](/operations/go-live) |
+| `05-observability-runbook.md` | [/operations/observability-runbook](/operations/observability-runbook) |
+| `PRD-logistics-commercial-extension.md` | Repo only (stub PRD) |
+
+## Not published
+
+| Path | Reason |
+|------|--------|
+| `docs/private/**` | Client/confidential governance vault |
+| `docs/reference/perplexity-architecture-spec.md` | Scratch reference, not maintained |
+
+See `docs/private/README.md` for the private vault layout.
+
+## Workflow
+
+1. Edit authoritative content in `docs/*.md` when doing deep engineering updates.
+2. Port summaries or full content into matching `mintlify/**/*.mdx`.
+3. Run `cd mintlify && npx mint validate && npx mint broken-links` before merge.
+
+Use [Mintlify MCP](/guides/using-mintlify-mcp) for component syntax and deploy settings.

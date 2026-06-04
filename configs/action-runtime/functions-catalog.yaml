@@ -1,0 +1,5 @@
+functions:
+  - id: echo
+    handler: echo
+  - id: read_entity
+    handler: read_entity

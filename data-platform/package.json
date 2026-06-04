@@ -18,7 +18,17 @@
         "./dist/operational-store/tenant-session.d.ts"
       ],
       "event-bus": ["./dist/event-bus/nats-publisher.d.ts"],
-      "migrations": ["./dist/migrations/run-migrations.d.ts"]
+      "migrations": ["./dist/migrations/run-migrations.d.ts"],
+      "lakehouse/bronze-writer": ["./dist/lakehouse/bronze-writer.d.ts"],
+      "lakehouse/silver-writer": ["./dist/lakehouse/silver-writer.d.ts"],
+      "lakehouse/lakehouse-reader": ["./dist/lakehouse/lakehouse-reader.d.ts"],
+      "lakehouse/bronze-reader": ["./dist/lakehouse/bronze-reader.d.ts"],
+      "lakehouse/export/lakehouse-exporter": [
+        "./dist/lakehouse/export/lakehouse-exporter.d.ts"
+      ],
+      "product-sessions/gpt-session-store": [
+        "./dist/product-sessions/gpt-session-store.d.ts"
+      ]
     }
   },
   "exports": {
@@ -49,6 +59,36 @@
       "types": "./dist/migrations/run-migrations.d.ts",
       "import": "./dist/migrations/run-migrations.js",
       "default": "./dist/migrations/run-migrations.js"
+    },
+    "./lakehouse/bronze-writer": {
+      "types": "./dist/lakehouse/bronze-writer.d.ts",
+      "import": "./dist/lakehouse/bronze-writer.js",
+      "default": "./dist/lakehouse/bronze-writer.js"
+    },
+    "./lakehouse/silver-writer": {
+      "types": "./dist/lakehouse/silver-writer.d.ts",
+      "import": "./dist/lakehouse/silver-writer.js",
+      "default": "./dist/lakehouse/silver-writer.js"
+    },
+    "./lakehouse/lakehouse-reader": {
+      "types": "./dist/lakehouse/lakehouse-reader.d.ts",
+      "import": "./dist/lakehouse/lakehouse-reader.js",
+      "default": "./dist/lakehouse/lakehouse-reader.js"
+    },
+    "./lakehouse/bronze-reader": {
+      "types": "./dist/lakehouse/bronze-reader.d.ts",
+      "import": "./dist/lakehouse/bronze-reader.js",
+      "default": "./dist/lakehouse/bronze-reader.js"
+    },
+    "./lakehouse/export/lakehouse-exporter": {
+      "types": "./dist/lakehouse/export/lakehouse-exporter.d.ts",
+      "import": "./dist/lakehouse/export/lakehouse-exporter.js",
+      "default": "./dist/lakehouse/export/lakehouse-exporter.js"
+    },
+    "./product-sessions/gpt-session-store": {
+      "types": "./dist/product-sessions/gpt-session-store.d.ts",
+      "import": "./dist/product-sessions/gpt-session-store.js",
+      "default": "./dist/product-sessions/gpt-session-store.js"
     }
   },
   "scripts": {
@@ -58,6 +98,7 @@
     "db:migrate": "node --import tsx migrations/run-migrations.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.750.0",
     "@daemon/context-ports": "workspace:*",
     "neo4j-driver": "^5.28.1",
     "pg": "^8.13.1",

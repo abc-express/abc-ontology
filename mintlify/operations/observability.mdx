@@ -1,0 +1,35 @@
+---
+title: "Observability"
+description: "Structured logging, Prometheus metrics, eval hooks, and local compose stack."
+---
+
+## Package (`@daemon/observability`)
+
+| Module | Purpose |
+|--------|---------|
+| `observability/logging/structured-logger.ts` | JSON one-line logs |
+| `observability/metrics/http-metrics.ts` | Counters + Prometheus text via `globalHttpMetrics` |
+| `observability/evals/eval-hooks.ts` | Agent/workflow quality (`EvalRecorder`) |
+
+## Runtime hooks
+
+- **NestJS gateway**: `ObservabilityModule` — request middleware and `GET /metrics`
+- **Standalone REST** (`api/rest`): same pattern
+- **Health**: `GET /health` on gateway and REST
+
+## Config artifacts
+
+- `observability/metrics/prometheus-rules.yaml`
+- `observability/tracing/otel-collector.yaml` — in `deployment/docker/compose.dev.yaml`
+- `observability/dashboards/gateway-overview.json`
+
+## Local stack
+
+```bash
+docker compose -f deployment/docker/compose.dev.yaml up -d
+curl http://localhost:3000/metrics
+```
+
+Set `LOG_LEVEL=debug|info|warn|error`. Environment defaults in `configs/environments/*.yaml`.
+
+Source: `docs/05-observability.md`.

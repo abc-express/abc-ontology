@@ -5,6 +5,7 @@ import type { EntityReadModelProjection } from "../projections/read-models/entit
 import type { MaterializedView } from "../projections/materialized-views/materialized-view.js";
 import type { GraphEdgeSyncPort } from "./propagation-graph-sync.js";
 import type { Neo4jGraphSync } from "../graph-sync/neo4j-graph-sync.js";
+import type { ScopedOntologySearch } from "../search/scoped-ontology-search.js";
 
 export type PropagationTrigger = "register" | "patch";
 
@@ -23,6 +24,20 @@ export interface PropagationTargets {
   materializedViews: Map<string, MaterializedView>;
   graphEdgeSync?: GraphEdgeSyncPort;
   neo4jGraphSync?: Neo4jGraphSync;
+  ontologySearch?: ScopedOntologySearch;
+  lakehouseBronze?: {
+    append(
+      scope: OntologyScope,
+      record: EntityRecord,
+      trigger: PropagationTrigger,
+    ): void | Promise<void>;
+  };
+  lakehouseSilver?: {
+    upsert(
+      scope: OntologyScope,
+      record: EntityRecord,
+    ): void | Promise<void>;
+  };
 }
 
 const KNOWN_TARGETS = new Set([
@@ -30,6 +45,9 @@ const KNOWN_TARGETS = new Set([
   "audit-loop",
   "graph-edge-sync",
   "neo4j-graph-sync",
+  "semantic-vector-index",
+  "lakehouse-bronze",
+  "lakehouse-silver",
 ]);
 
 function isMaterializedViewTarget(target: string): string | undefined {
@@ -113,6 +131,15 @@ export class PropagationExecutor {
     if (target === "neo4j-graph-sync") {
       if (!this.targets.neo4jGraphSync) return;
       this.targets.neo4jGraphSync.sync(ctx.record, ctx.scope);
+    }
+    if (target === "semantic-vector-index") {
+      void this.targets.ontologySearch?.indexAsync(ctx.record, ctx.scope);
+    }
+    if (target === "lakehouse-bronze") {
+      void this.targets.lakehouseBronze?.append(ctx.scope, ctx.record, ctx.trigger);
+    }
+    if (target === "lakehouse-silver") {
+      void this.targets.lakehouseSilver?.upsert(ctx.scope, ctx.record);
     }
   }
 }

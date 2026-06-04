@@ -1,5 +1,6 @@
 import type { WriteCommand } from "./command-gateway.js";
 import { DaemonError, ErrorCodes } from "@daemon/platform-types";
+import { assertWriteLogicAllowed } from "./write-logic-guard.js";
 
 export class MutationValidator {
   validate(cmd: WriteCommand): void {
@@ -15,5 +16,6 @@ export class MutationValidator {
         throw new DaemonError(ErrorCodes.VALIDATION, `forbidden key: ${key}`, 400);
       }
     }
+    assertWriteLogicAllowed(cmd);
   }
 }

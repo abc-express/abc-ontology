@@ -40,12 +40,21 @@ Requires extension pack `logistics-commercial` merged for the caller's domain. U
 | LQ-06 | List shipments with status `{status}` | Filter `Shipment` by `status` |
 | LQ-07 | How many links does shipment `{shipmentId}` have? | Count `LINK` from `Shipment` |
 
+## Logistics-commercial extension (domain `logistics`, P1)
+
+| ID | Question (natural language) | Expected graph pattern |
+|----|----------------------------|------------------------|
+| LQ-08 | Which **Opportunity** records reference account `{accountId}`? | `Opportunity` with `accountRef` or `LINK` → `Account` |
+| LQ-09 | What **Conversation** rows tie to opportunity `{opportunityId}`? | `Conversation` with `opportunityRef` or `LINK` → `Opportunity` |
+
+Pack resolution supports `packBranch` / `environment` query params on `GET /v1/ontology/pack-resolution` (see [17-platform-decision-map.md](./17-platform-decision-map.md)).
+
 ### Negative competency (logistics domain, v1)
 
-Do **not** claim answers (return empty or explain out-of-scope) until P1 pack entities and graph scope exist:
+Do **not** claim answers (return empty or explain out-of-scope) until later pack entities and graph scope exist:
 
 - Transport-planning / **Trip** allocation, **Dispatch**, **RoutingDecision**
-- **Signal** stages, TP-engine outputs, pipeline stages (**Lead**, **Opportunity**, **Pipeline**, etc.)
+- **Signal** stages, TP-engine outputs, pipeline stages (**Lead**, **Pipeline**, etc.)
 - Financial journal entries, cost-center profitability, chargeable-weight rules on **ShipmentLeg**
 
 Operational KPIs and live execution state remain in downstream operational systems; DAEMON holds semantic registration and read projection only.

@@ -31,7 +31,7 @@ todos:
     status: completed
   - id: verify-release
     content: Green CI across TS/Go/Rust; changeset release dry-run for @daemon packages
-    status: pending
+    status: completed
 isProject: false
 ---
 

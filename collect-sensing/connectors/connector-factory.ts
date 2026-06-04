@@ -13,6 +13,12 @@ import {
   EventSubscriberConnector,
   type EventSubscription,
 } from "./event-connectors/event-subscriber-connector.js";
+import { S3Connector } from "./file-connectors/s3-connector.js";
+import { KafkaConsumerConnector } from "./event-connectors/kafka-consumer-connector.js";
+import {
+  JdbcCdcConnector,
+  type CdcQueryExecutor,
+} from "./db-connectors/jdbc-cdc-connector.js";
 import type {
   IngestSourceDefinition,
   SourceConnectorConfig,
@@ -22,6 +28,7 @@ import { resolveRepoPath } from "../paths.js";
 export interface ConnectorFactoryOptions {
   readonly httpFetch?: HttpFetch;
   readonly queryExecutor?: QueryExecutor;
+  readonly cdcQueryExecutor?: CdcQueryExecutor;
   readonly eventSubscription?: EventSubscription;
 }
 
@@ -79,6 +86,40 @@ function buildConnector(
         batchSize: config.batchSize,
         recordIdKey: config.recordIdKey,
         pullTimeoutMs: config.pullTimeoutMs,
+      });
+    }
+    case "s3":
+      return new S3Connector({
+        sourceId,
+        bucket: config.bucket,
+        prefix: config.prefix,
+        region: config.region,
+        format: config.format,
+        keys: config.keys,
+        recordIdKey: config.recordIdKey,
+        endpoint: config.endpoint,
+      });
+    case "kafka":
+      return new KafkaConsumerConnector({
+        sourceId,
+        brokers: config.brokers,
+        topic: config.topic,
+        groupId: config.groupId,
+        maxMessages: config.maxMessages,
+        recordIdKey: config.recordIdKey,
+      });
+    case "jdbc-cdc": {
+      if (!options.cdcQueryExecutor) {
+        throw new Error(
+          `jdbc-cdc connector for source ${sourceId} requires cdcQueryExecutor (set DAEMON_POSTGRES_URL)`,
+        );
+      }
+      return new JdbcCdcConnector(options.cdcQueryExecutor, {
+        sourceId,
+        table: config.table,
+        cursorColumn: config.cursorColumn,
+        lastCursor: config.lastCursor,
+        recordIdColumn: config.recordIdColumn,
       });
     }
     default: {

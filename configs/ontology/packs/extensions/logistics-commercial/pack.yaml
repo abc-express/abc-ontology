@@ -4,6 +4,8 @@ description: Logistics commercial extension — dual-domain commercial and opera
 entityTypes:
   - Account
   - Contact
+  - Opportunity
+  - Conversation
   - Order
   - Shipment
   - TTK

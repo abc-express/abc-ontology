@@ -1,19 +1,31 @@
 gateway:
-  replicaCount: 2
+  replicas: 2
+  port: 3000
   image:
     repository: daemon/api-gateway
     tag: "0.1.0"
+    pullPolicy: IfNotPresent
   service:
+    type: ClusterIP
     port: 80
   policyEngineUrl: http://daemon-policy:8090
 
 ingest:
-  replicaCount: 1
+  replicas: 1
+  port: 8081
   image:
     repository: daemon/collect-sensing
     tag: "0.1.0"
+    pullPolicy: IfNotPresent
   service:
     port: 8081
+
+agentWorker:
+  replicas: 1
+  image:
+    repository: daemon/agent-worker
+    tag: "0.1.0"
+    pullPolicy: IfNotPresent
 
 postgres:
   enabled: true

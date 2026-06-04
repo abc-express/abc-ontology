@@ -1,0 +1,36 @@
+# Connector type catalog — metadata for ingest sources (see collect-sensing/connectors).
+connectorTypes:
+  - type: file
+    label: File ingest
+    capabilities: [batch, jsonl, csv]
+    requiredConfig: [format, path]
+    policyTier: internal
+  - type: http-pull
+    label: HTTP pull
+    capabilities: [batch, rest]
+    requiredConfig: [url]
+    requiredEnv: []
+    policyTier: internal
+  - type: postgres-read
+    label: Postgres read
+    capabilities: [sql, batch]
+    requiredConfig: [query]
+    requiredEnv: [DAEMON_POSTGRES_URL]
+    policyTier: internal
+  - type: event-subscriber
+    label: Event subscriber
+    capabilities: [stream]
+    requiredConfig: [topic]
+    policyTier: internal
+  - type: s3
+    label: S3 object ingest
+    capabilities: [batch, jsonl, csv, s3]
+    requiredConfig: [bucket, prefix, format]
+    requiredEnv: []
+    policyTier: internal
+  - type: kafka
+    label: Kafka consumer
+    capabilities: [stream, batch]
+    requiredConfig: [topic, brokers]
+    requiredEnv: []
+    policyTier: internal

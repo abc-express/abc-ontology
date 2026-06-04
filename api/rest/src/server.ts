@@ -100,7 +100,7 @@ async function handle(
     const ont = ontologyId(url.searchParams.get("ontologyId") ?? defaultOntology());
     const limitRaw = url.searchParams.get("limit");
     const limit = limitRaw ? Number(limitRaw) : undefined;
-    const report = analytics.searchAndReport({
+    const report = await analytics.searchAndReport({
       query: q,
       ontologyId: ont,
       limit: Number.isFinite(limit) ? limit : undefined,
@@ -116,7 +116,7 @@ async function handle(
     const ont = ontologyId(url.searchParams.get("ontologyId") ?? defaultOntology());
     const limitRaw = url.searchParams.get("limit");
     const limit = limitRaw ? Number(limitRaw) : undefined;
-    const entities = analytics.search({
+    const entities = await analytics.search({
       query: q,
       ontologyId: ont,
       limit: Number.isFinite(limit) ? limit : undefined,

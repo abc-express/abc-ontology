@@ -1,0 +1,37 @@
+---
+title: "Bounded contexts"
+description: "Context responsibilities, gateway composition root rules, and multi-tenant headers."
+---
+
+| Context | Responsibility | Must not |
+|---------|----------------|----------|
+| collect-sensing | Ingest, normalize, enrich | Decide business outcomes |
+| ontology | Semantic truth, versions, packs, tenancy | Execute workflows |
+| read-write-loops | Reads, writes, approvals | Define ontology schema alone |
+| action-runtime | Workflows, agents | Own registry |
+| security-governance | Auth, policy, audit | Store business entities |
+| context-ports | `OntologyStore`, `AuditPort` contracts | Implement storage or HTTP |
+
+Cross-cutting: `engine/`, `data-platform/`, `observability/`.
+
+## API gateway boundary
+
+`api/gateway` is the composition root for HTTP:
+
+- **Ingest** — validates pack/governance, registers via `runtime.store`.
+- **Read** — `runtime.readRouter` with tenant/domain scope from headers.
+- **Write** — `runtime.runWriteLoop()` (policy + loop + audit), not raw `CommandGateway` in controllers.
+
+Forbidden in gateway service/controller layers (enforced by `pnpm run check:architecture`):
+
+- Direct import of `globalRegistry` from `@daemon/ontology`
+- Direct import of `CommandGateway` from `@daemon/read-write-loops`
+
+## Multi-tenant headers
+
+| Header | Default | Purpose |
+|--------|---------|---------|
+| `X-Daemon-Tenant` | `default` | Tenant id from `configs/tenancy.yaml` |
+| `X-Daemon-Domain` | `foundation` | Domain from `configs/ontology/domains/catalog.yaml` |
+
+Example tenant ids for tests and local dev: `inst-alpha`, `ent-beta` (generic placeholders).

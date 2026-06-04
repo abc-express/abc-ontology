@@ -1,0 +1,111 @@
+---
+title: "TypeScript SDK"
+description: "@daemon/sdk DaemonClient, pack codegen, and OpenAPI parity checks."
+---
+
+## Install and configure
+
+```bash
+pnpm add @daemon/sdk
+```
+
+```typescript
+import { DaemonClient } from "@daemon/sdk";
+
+const client = new DaemonClient({
+  baseUrl: process.env.DAEMON_GATEWAY_URL ?? "http://localhost:3000",
+  apiKey: process.env.DAEMON_API_KEY, // optional → x-api-key
+  tenantId: "acme", // optional → X-Daemon-Tenant
+  domainId: "foundation", // optional → X-Daemon-Domain
+});
+```
+
+Multi-tenant scope is resolved on the gateway from `X-Daemon-Tenant` and `X-Daemon-Domain` (see `api/gateway/src/platform/tenant-context.ts`). When omitted, the gateway uses its configured defaults.
+
+Optional `getSession` supplies a `DaemonSession` serialized as `x-daemon-session` for policy-aware calls.
+
+## `DaemonClient` surface
+
+| Method | HTTP | Policy resource (typical) |
+|--------|------|---------------------------|
+| `health()` | `GET /health` | — |
+| `readEntity` | `GET /v1/read/entities/{id}` | `entity` (read) |
+| `listEntities` | `GET /v1/read/entities` | `entity` (read) |
+| `search` | `GET /v1/search` | `ontology-search` (query) |
+| `lakehouseSummary` | `GET /v1/lakehouse/summary` | `lakehouse` (read) |
+| `lakehouseEvents` | `GET /v1/lakehouse/events` | `lakehouse` (read) |
+| `analyticsLakehouseSummary` | `GET /v1/analytics/lakehouse-summary` | `analytics` (query) |
+| `ingestStartJob` / `ingestGetJob` | `POST/GET /v1/ingest/jobs` | `ingest-job` |
+| `ingestRunSource` | `POST /v1/ingest/sources/{sourceId}/run` | `ingest-source` |
+| `ingestRecords` | `POST /v1/ingest/records` | `ingest-record` |
+| `listIngestSchedules` / `createIngestSchedule` / `patchIngestSchedule` | `GET/POST/PATCH /v1/ingest/schedules` | `ingest-schedule` |
+| `ingestWebhook` | `POST /v1/ingest/webhooks/{sourceId}` | `ingest-record` |
+| `dataHealthSummary` | `GET /v1/data-health/summary` | `lakehouse` (read) |
+| `startLakehouseExport` / `getLakehouseExport` | `POST/GET /v1/lakehouse/export*` | `lakehouse` (read) |
+| `listMediaObjects` / `registerMediaObject` | `GET/POST /v1/media/objects` | `media` |
+| `ontologyPackResolution` | `GET /v1/ontology/pack-resolution` | `ontology` (read) |
+| `runPipeline` | `POST /v1/pipelines/{pipelineId}/run` | `pipeline` |
+| `runEvals` / `listEvalRuns` | `POST/GET /v1/evals/*` | `eval` |
+| `queryAsk` | `POST /v1/query/ask` | `ontology-nl` (query) |
+| `customerGptChat` | `POST /v1/products/customer-gpt/chat` | `customer-gpt` (chat) |
+| `automationsRun` / `automationsEvaluate` / `automationsApprove` | `POST /v1/automations/*` | workflow + write paths |
+| `submitWrite` | `POST /v1/write` | `entity` (write) |
+| `checkPolicy` | `POST /v1/policy/check` | — |
+
+Lakehouse query parameters:
+
+- `lakehouseSummary({ since? })` — ISO timestamp window for bronze aggregations.
+- `lakehouseEvents({ since?, limit?, entityType?, ontologyId?, changeType? })` — `changeType` is `register` or `patch`.
+- `analyticsLakehouseSummary({ since?, reportTitle? })` — packaged analytics report over the same bronze summary.
+
+Typed responses: `LakehouseSummary`, `LakehouseAnalyticsReport`, `LakehouseEventsParams` in `packages/sdk/src/types.ts`.
+
+## Pack codegen
+
+From the repo root:
+
+```bash
+pnpm run codegen:pack
+```
+
+Generates pack-scoped types and action metadata under `packages/sdk/src/generated/`. `pnpm run spec:check` includes a stale check for generated output (`scripts/codegen-check.mjs`).
+
+Import generated foundation types:
+
+```typescript
+import { foundationActions } from "@daemon/sdk/generated/foundation/actions.js";
+```
+
+## Contract drift
+
+```bash
+pnpm run spec:check
+```
+
+Runs OpenAPI/gateway parity (`scripts/check-openapi-gateway-parity.mjs`), spec validation, and codegen freshness. Gateway routes documented in OpenAPI should match what `DaemonClient` calls.
+
+## Ontology / OSDK ergonomics (not compatibility)
+
+Educational mapping for teams used to enterprise ontology platforms. daemon-sdk does **not** implement Palantir OSDK or Foundry APIs.
+
+| Enterprise ontology concept | daemon-sdk analogue |
+|----------------------------|---------------------|
+| Object type / object | Pack entity YAML + `EntityRecord` |
+| Action type | `configs/governance/action-catalog.yaml` + `POST /v1/write` / automations |
+| OSDK-style client | `@daemon/sdk` `DaemonClient` |
+| Object set / search | `GET /v1/search`, `listEntities` |
+| AIP-style chat + retrieval | Customer GPT + hybrid search citations |
+
+Data-layer concepts (datasets, pipelines, CDC): [14-data-integration-map.md](https://github.com/daemon-blockint-tech/DAEMON/tree/main/docs/14-data-integration-map.md).
+
+Connectivity (cloud pull vs agent-style ingest): [15-data-connection-map.md](https://github.com/daemon-blockint-tech/DAEMON/tree/main/docs/15-data-connection-map.md).
+
+Data Ops lifecycle (Connect → Transform → Model → Analyze): [16-data-ops-lifecycle-map.md](https://github.com/daemon-blockint-tech/DAEMON/tree/main/docs/16-data-ops-lifecycle-map.md). Platform maps: [17-platform-decision-map.md](https://github.com/daemon-blockint-tech/DAEMON/tree/main/docs/17-platform-decision-map.md), [18-enterprise-platform-map.md](https://github.com/daemon-blockint-tech/DAEMON/tree/main/docs/18-enterprise-platform-map.md).
+
+## Related docs
+
+- [11-data-platform-lakehouse.md](https://github.com/daemon-blockint-tech/DAEMON/tree/main/docs/11-data-platform-lakehouse.md) — bronze/silver/gold tables and gateway lakehouse APIs
+- [12-connectors-catalog.md](https://github.com/daemon-blockint-tech/DAEMON/tree/main/docs/12-connectors-catalog.md) — ingest sources and connectors
+- [05-security-governance.md](https://github.com/daemon-blockint-tech/DAEMON/tree/main/docs/05-security-governance.md) — policy engine and RBAC
+- [06-deployment-topology.md](https://github.com/daemon-blockint-tech/DAEMON/tree/main/docs/06-deployment-topology.md) — gateway and ingest services
+

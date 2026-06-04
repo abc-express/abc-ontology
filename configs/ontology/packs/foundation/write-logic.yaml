@@ -1,0 +1,7 @@
+# Pack write-time logic (evaluated on gateway write path).
+rules:
+  - id: classified-field-guard
+    denyPatchKeys:
+      - classification
+      - clearanceLevel
+    requireRole: admin

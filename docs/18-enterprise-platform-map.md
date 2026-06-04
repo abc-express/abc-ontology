@@ -1,0 +1,158 @@
+# Enterprise platform map (Foundry-style → daemon-sdk)
+
+Educational map comparing a **Foundry-style enterprise data operating system** ([Palantir Foundry](https://www.palantir.com/platforms/foundry/)) to daemon-sdk: platform layers, data vs ontology, [Pipeline Builder](https://www.palantir.com/docs/foundry/pipeline-builder/overview), and the [`products/`](../products/) application layer.
+
+Not API-compatible with Foundry, AIP, or OSDK. Use with [14-data-integration-map.md](./14-data-integration-map.md), [16-data-ops-lifecycle-map.md](./16-data-ops-lifecycle-map.md), and [17-platform-decision-map.md](./17-platform-decision-map.md).
+
+## Enterprise operating system (three platforms)
+
+Palantir’s public architecture describes three integrated platforms. daemon-sdk maps them loosely to deploy, data/ontology, and AI surfaces.
+
+| Platform | Foundry role | daemon-sdk analogue |
+|----------|--------------|---------------------|
+| **Apollo** | Continuous delivery, zero-downtime upgrades | `compose/`, [06-deployment-topology.md](./06-deployment-topology.md), CI (`pnpm run test:repo`, `pnpm run check:architecture`) |
+| **Foundry** | Data integration, ontology, operational apps | NestJS gateway, ontology BC, collect-sensing, lakehouse, `products/` |
+| **AIP** | LLM connectivity, agents, evals, Logic | `products/customer-gpt`, `products/ontology-query`, hybrid search, optional OpenRouter |
+
+**Forward-deployed engineering** (embedded builders shipping to real environments) is a delivery culture analogue: extension packs (e.g. logistics-commercial), integration tests, and PRD-driven domains—not a separate product module.
+
+## Two layers: data vs ontology
+
+Foundry separates a **data layer** (datasets, transforms, lineage) from an **object layer** (ontology: objects, links, actions).
+
+```mermaid
+flowchart TB
+  subgraph sources [SourceSystems]
+    ERP[ERP_APIs_files]
+  end
+  subgraph dataLayer [Data_layer]
+    DS[Datasets_transforms_syncs]
+  end
+  subgraph objectLayer [Ontology_layer]
+    OT[Object_types_links_actions]
+  end
+  subgraph apps [Applications]
+    APP[Workshop_Slate_OSDK_AIP]
+  end
+  ERP --> DS --> OT --> APP
+```
+
+### daemon-sdk equivalent flow
+
+```mermaid
+flowchart TB
+  SRC[sources_connectors] --> ING[ingest_normalize]
+  ING --> REG[register_patch_registry]
+  REG --> PROP[propagation_lakehouse_search_graph]
+  PROP --> PROD[products_and_gateway_HTTP]
+```
+
+| Foundry layer | daemon-sdk |
+|---------------|------------|
+| Datasets / transforms | Bronze/silver/gold Postgres, propagation ([11](./11-data-platform-lakehouse.md)) |
+| Ontology objects/links | Pack entities, `Link`, registry journal |
+| Applications | `products/*` + `GET/POST /v1/*` ([13-sdk.md](./13-sdk.md)) |
+
+## Data integration — Pipeline Builder
+
+[Pipeline Builder](https://www.palantir.com/docs/foundry/pipeline-builder/overview) workflow: **Inputs → Transform → Preview → Deliver → Outputs**. Outputs may include datasets, media sets, or ontology object types.
+
+| Aspect | Foundry | daemon-sdk |
+|--------|---------|------------|
+| Authoring | Point-and-click graph + backend codegen | YAML sources, code normalizers, ingest pipeline service |
+| Engines | Spark, Flink, single-node (Pandas/Polars/DuckDB) | Go/TS ingest; propagation in-process |
+| Ontology publish | Direct from pipeline deliver step | `register` after validated ingest |
+| Health | Data Health app, expectations | `check:*`, integration tests, lakehouse summary |
+
+Detail for the **Transform** phase: [16-data-ops-lifecycle-map.md](./16-data-ops-lifecycle-map.md).
+
+## Products layer (`products/`)
+
+Gateway routes **product-router** operations through [products/product-shell/product-router.ts](../products/product-shell/product-router.ts) and `ProductRuntime` (from `DaemonRuntime`). Do not import `globalRegistry` or `CommandGateway` from product modules.
+
+**Related packages outside `ProductId`:** [products/ontology-query/](../products/ontology-query/) powers `POST /v1/query/ask` (gateway `QueryModule`); [customer-gpt](../products/customer-gpt/) imports shared LLM helpers from ontology-query.
+
+### Product registry
+
+| `ProductId` | Module | Foundry-style analogue | Typical gateway surface |
+|-------------|--------|------------------------|-------------------------|
+| `analytics-workflows` | [products/analytics-workflows/](../products/analytics-workflows/) | Quiver / Contour-style search and dashboard inputs | Analytics controller, QueryWizard, hybrid search |
+| `customer-gpt` | [products/customer-gpt/](../products/customer-gpt/) | AIP Chatbot + retrieval context | `POST /v1/products/customer-gpt/chat` |
+| `ontology-query` (package, not a `ProductId`) | [products/ontology-query/](../products/ontology-query/) via [api/gateway/src/query/](../api/gateway/src/query/) | Insight / Object Explorer / NL over ontology | `POST /v1/query/ask`, `DaemonClient.queryAsk` ([09](./09-ontology-competency-questions.md)); LangGraph chain is not routed through [product-router.ts](../products/product-shell/product-router.ts) |
+| `automations` | [products/automations/](../products/automations/) | Automate (conditions → effects) | `POST /v1/automations/*` |
+| `internal-applications` | [products/internal-applications/](../products/internal-applications/) | Internal COP / snapshot dashboards | Snapshot ops via product router |
+| `admin-console` | [products/admin-console/](../products/admin-console/) | Admin / inventory views (loose) | List entities admin op |
+| `data-health` | [products/data-health/](../products/data-health/) | Data Health monitoring | `GET /v1/data-health/summary` |
+| `pipeline-builder` | [products/pipeline-builder/](../products/pipeline-builder/) | Pipeline Builder (DAG) | `POST /v1/pipelines/:pipelineId/run` |
+| `aip-evals` | [products/aip-evals/](../products/aip-evals/) | AIP Evals | `POST /v1/evals/run`, `GET /v1/evals/runs` |
+
+**Console:** [apps/dsdk-console](../apps/dsdk-console/) — enterprise shell over `@daemon/sdk` (not OSDK-generated).
+
+### SDK entry points for products
+
+From `@daemon/sdk` `DaemonClient`: `customerGptChat`, `queryAsk`, `automationsRun` / `Evaluate` / `Approve`, `analyticsLakehouseSummary`, `search` — see [13-sdk.md](./13-sdk.md).
+
+### Not implemented (gaps)
+
+| Foundry application | Status in daemon-sdk |
+|--------------------|----------------------|
+| Workshop / Slate widget composer | DSDK console tabs; no full low-code builder |
+| OSDK-generated React apps | HTTP client + codegen + console |
+| Pilot (NL app generator) | — |
+| Quiver / Contour / Fusion as standalone UIs | Partial via search + lakehouse APIs + console |
+| AIP Logic visual blocks | Partial via ontology-query + automations |
+| AIP Evals | **Implemented (DSDK MVP):** `aip-evals` product + eval APIs |
+| Developer Console / hosted OSDK apps | OpenAPI + `@daemon/sdk` + dsdk-console |
+
+## AIP and automation (summary)
+
+| Foundry | daemon-sdk |
+|---------|------------|
+| AIP Chatbot Studio | `customer-gpt` |
+| AIP Logic | `ontology-query`, automations evaluate paths |
+| AIP Assist | — (use external IDE + docs) |
+| Automate | `automations` + `action-catalog` `onCommitted` |
+| Retrieval context | Hybrid search + lakehouse citations in GPT |
+
+## Multimodal data plane (MMDP) and interoperability
+
+Foundry’s MMDP emphasizes Iceberg, virtual catalogs, streaming compute, and compute modules. daemon-sdk today:
+
+| MMDP theme | daemon-sdk |
+|------------|------------|
+| Open table format (Iceberg) | Postgres bronze; export job writes JSONL + Iceberg metadata sidecar (MVP) |
+| Virtual tables | Gold SQL views |
+| Streaming (Flink) | Event-driven propagation; no stream product |
+| Bring-your-own compute | Extension point via connectors; no compute modules product |
+| LLM model catalog | Env-based OpenRouter; not a hosted model catalog |
+
+## Observability
+
+| Foundry | daemon-sdk |
+|---------|------------|
+| Data Health monitoring views | `check:sources`, `check:governance-policies` |
+| Workflow Lineage / AIP observability | Audit journal, propagation audit-loop, integration tests |
+| Metrics export to dataset | Query bronze/summary APIs; no log-export pipeline |
+
+## Public documentation index
+
+Use these for terminology alignment only:
+
+- [Foundry platform](https://www.palantir.com/platforms/foundry/)
+- [Getting started / introductory concepts](https://www.palantir.com/docs/foundry/getting-started/introductory-concepts)
+- [Pipeline Builder](https://www.palantir.com/docs/foundry/pipeline-builder/overview)
+- [Data integration](https://www.palantir.com/docs/foundry/data-integration/overview)
+- [Ontology](https://www.palantir.com/docs/foundry/ontology/overview)
+- [Workshop](https://www.palantir.com/docs/foundry/workshop/overview)
+- [OSDK](https://www.palantir.com/docs/foundry/ontology-sdk/overview)
+- [AIP](https://www.palantir.com/docs/foundry/aip/overview)
+- [Automate](https://www.palantir.com/docs/foundry/automate/overview)
+- [Observability / Data Health](https://www.palantir.com/docs/foundry/observability/data-health)
+
+## Related docs
+
+- [16-data-ops-lifecycle-map.md](./16-data-ops-lifecycle-map.md)
+- [17-platform-decision-map.md](./17-platform-decision-map.md)
+- [14-data-integration-map.md](./14-data-integration-map.md)
+- [15-data-connection-map.md](./15-data-connection-map.md)
+- [01-end-to-end-architecture.md](./01-end-to-end-architecture.md)

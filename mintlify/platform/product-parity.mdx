@@ -1,0 +1,50 @@
+---
+title: "Product parity matrix"
+description: "Weighted Live capabilities for the enterprise data OS mimic stack."
+---
+
+Weighted capability matrix for the Daemon platform mimic stack (data connection, data integration, ontology, AIP, Apollo). This is **not** Palantir API compatibility. See [13-sdk.md](https://github.com/daemon-blockint-tech/DAEMON/tree/main/docs/13-sdk.md) and [14-data-integration-map.md](https://github.com/daemon-blockint-tech/DAEMON/tree/main/docs/14-data-integration-map.md).
+
+**Golden E2E:** [06-testing.md](https://github.com/daemon-blockint-tech/DAEMON/tree/main/docs/06-testing.md) — `tests/integration/foundry-parity-golden.integration.test.ts` (no domain mocks; `DAEMON_INGEST_SKIP_UPSTREAM` unset).
+
+| Pilar | Capability | Status | Weight | Evidence |
+|-------|------------|--------|--------|----------|
+| Foundry-DC | File ingest (jsonl) | Live | 2 | `tests/integration/foundry-parity-golden.integration.test.ts` |
+| Foundry-DC | HTTP pull connector | Live | 2 | `tests/integration/ingest-http-pull.integration.test.ts` |
+| Foundry-DC | Postgres read connector | Live | 2 | `collect-sensing/connectors/db-connectors/postgres-read-connector.ts` |
+| Foundry-DC | S3 / MinIO connector | Live | 2 | `collect-sensing/connectors/file-connectors/s3-connector.ts` |
+| Foundry-DC | Kafka consumer connector | Live | 2 | `collect-sensing/connectors/event-connectors/kafka-consumer-connector.ts` |
+| Foundry-DC | NATS event-subscriber | Live | 1 | `collect-sensing/connectors/event-connectors/nats-subscription.ts` |
+| Foundry-DC | Webhook ingress | Live | 2 | `api/gateway/src/ingest/ingest-webhook.service.ts` |
+| Foundry-DC | Listener batch ingress | Live | 2 | `api/gateway/src/ingest/ingest-listener.service.ts` |
+| Foundry-DC | Agent worker push | Live | 1 | `collect-sensing/cmd/agent-worker/main.go` |
+| Foundry-DC | JDBC CDC polling | Live | 1 | `collect-sensing/connectors/db-connectors/jdbc-cdc-connector.ts` |
+| Foundry-DI | Source run pipeline | Live | 3 | `tests/integration/foundry-parity-golden.integration.test.ts` |
+| Foundry-DI | Ingest scheduler (cron) | Live | 2 | `api/gateway/src/ingest/ingest-schedule.service.ts` |
+| Foundry-DI | StreamPipeline hooks | Live | 1 | `collect-sensing/pipelines/stream-pipeline.ts` |
+| Foundry-DI | Bronze lakehouse events | Live | 3 | `tests/integration/lakehouse-bronze.integration.test.ts` |
+| Foundry-DI | Lakehouse export (object store) | Live | 2 | `data-platform/lakehouse/bronze-export.ts` |
+| Foundry-DI | Media objects API | Live | 2 | `api/gateway/src/media/media.controller.ts` |
+| Foundry-DI | Pipeline / job observability | Live | 2 | `api/gateway/src/ops/ops.service.ts` |
+| Ontology | Read entity by id | Live | 3 | `tests/e2e/ingest-read-write-http.test.ts` |
+| Ontology | List entities | Live | 3 | `api/gateway/src/read/read.controller.ts` |
+| Ontology | Write + journal | Live | 3 | `tests/e2e/ingest-read-write.test.ts` |
+| Ontology | Logic on write path | Live | 2 | `read-write-loops/writes/write-logic-guard.ts` |
+| Ontology | Hybrid search | Live | 2 | `tests/integration/search-hybrid.integration.test.ts` |
+| Ontology | Workshop-lite UI | Live | 1 | `experience-layer/workshop/index.html` |
+| AIP | Customer GPT | Live | 2 | `tests/integration/customer-gpt.integration.test.ts` |
+| AIP | Agent sessions API | Live | 2 | `api/gateway/src/agents/agents.controller.ts` |
+| AIP | Callable functions | Live | 2 | `api/gateway/src/functions/functions.controller.ts` |
+| AIP | Evals persist (Postgres) | Live | 2 | `api/gateway/src/evals/evals.service.ts` |
+| AIP | Admin internal status | Live | 1 | `api/gateway/src/admin/admin.controller.ts` |
+| AIP | Logic engine (TS + optional Rust URL) | Live | 1 | `read-write-loops/writes/logic-engine-client.ts` |
+| Apollo | Pack validate-change | Live | 2 | `api/gateway/src/governance/governance.controller.ts` |
+| Apollo | Pack promote | Live | 2 | `api/gateway/src/governance/governance.service.ts` |
+| Apollo | Ops health / jobs / connectors | Live | 2 | `api/gateway/src/ops/ops.controller.ts` |
+| Apollo | Helm chart (gateway, ingest, workers) | Live | 2 | `deployment/helm/daemon-platform/templates/` |
+| Apollo | Staging smoke script | Live | 1 | `scripts/staging-smoke.mjs` |
+
+**Planned (not slop — tracked in [15-data-connection-map.md](https://github.com/daemon-blockint-tech/DAEMON/tree/main/docs/15-data-connection-map.md)):** marketplace connectors, private link, full Workshop/Contour, OSDK OAuth, Iceberg catalog (beyond JSONL export v1).
+
+**Baseline vs target:** program target ~65–75% weighted Live on this matrix; run `pnpm run check:parity-matrix` in CI.
+

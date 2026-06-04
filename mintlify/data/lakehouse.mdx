@@ -1,0 +1,29 @@
+---
+title: "Lakehouse bronze"
+description: "Bronze-tier ontology change events in Postgres for analytics and compliance replay."
+---
+
+Bronze v1 persists ontology change events to Postgres in parallel with `daemon_ontology_changes`, supporting analytics and future silver/gold layers without changing foundation pack YAML.
+
+## Schema
+
+Table `daemon_lakehouse_bronze` (migration `004_lakehouse_bronze.sql`):
+
+| Column | Purpose |
+|--------|---------|
+| `tenant_id`, `domain_id` | Scope |
+| `ontology_id`, `entity_id`, `entity_type` | Entity identity |
+| `change_type` | `register` or `patch` |
+| `payload` | JSONB snapshot |
+| `source` | Propagation source label |
+| `indexed_at` | Event timestamp |
+
+## Write path
+
+`BronzeWriter.append` runs from `PropagationExecutor` when target `lakehouse-bronze` is configured in `configs/governance/propagation.yaml` for `register` and `patch`. Without `DAEMON_POSTGRES_URL`, the writer is a no-op.
+
+## Read path
+
+`GET /v1/lakehouse/events` — query params `since` (ISO timestamp), `limit` (max 500). Policy: `read` on resource `lakehouse`.
+
+Run migrations before enabling bronze in production. Details: `docs/11-data-platform-lakehouse.md`.

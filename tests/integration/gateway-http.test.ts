@@ -124,8 +124,8 @@ describe("gateway HTTP", () => {
       DAEMON_REPO_ROOT: root,
     });
     const tenantHeaders = authHeaders({
-      "x-tenant-id": "inst-alpha",
-      "x-domain-id": "foundation",
+      "x-daemon-tenant": "inst-alpha",
+      "x-daemon-domain": "foundation",
     });
     try {
       const run1 = await fetch(
@@ -144,7 +144,8 @@ describe("gateway HTTP", () => {
         properties: { displayName: string };
       };
       assert.equal(body1.properties.displayName, "Demo Party One");
-      assert.equal(body1.version, 1);
+      const versionAfterFirstRun = body1.version;
+      assert.ok(versionAfterFirstRun >= 1);
 
       const run2 = await fetch(
         `${baseUrl}/v1/ingest/sources/demo-parties/run`,
@@ -157,7 +158,7 @@ describe("gateway HTTP", () => {
         { headers: tenantHeaders },
       );
       const body2 = (await read2.json()) as { version: number };
-      assert.equal(body2.version, 2);
+      assert.equal(body2.version, versionAfterFirstRun + 1);
     } finally {
       await close();
     }

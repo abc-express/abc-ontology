@@ -1,0 +1,12 @@
+{
+  "name": "@daemon/ontology-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "ontology-mcp": "./server.mjs"
+  },
+  "scripts": {
+    "start": "node server.mjs"
+  }
+}

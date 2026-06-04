@@ -71,3 +71,9 @@ The standalone REST app ([api/rest](../api/rest)) mirrors read/write/analytics/a
 **Bounded contexts** (six) plus cross-cutting infra are listed in [02-bounded-contexts.md](./02-bounded-contexts.md). Data flows: external sources → collect-sensing connectors and normalization in TypeScript → gateway `DaemonRuntime` upsert into ontology (scoped by tenant/domain) → read/write loops and products → action-runtime workflows where automations commit governed writes. The Go ingestion orchestrator records optional job metadata only; it does not register entities in the ontology store.
 
 Governance and pack metadata live under `configs/ontology/` and `configs/governance/`; mapping to Ontology Master / Technology OS tiers is in [08-semantic-governance-alignment.md](./08-semantic-governance-alignment.md).
+
+## Related docs (platform and Data Ops maps)
+
+- [16-data-ops-lifecycle-map.md](./16-data-ops-lifecycle-map.md) — Connect → Transform → Model → Analyze
+- [17-platform-decision-map.md](./17-platform-decision-map.md) — Data / Logic / Actions pillars
+- [18-enterprise-platform-map.md](./18-enterprise-platform-map.md) — Foundry-style layers and [`products/`](../products/) application map

@@ -8,6 +8,7 @@ export interface EntityJournal {
   upsertGraphEdge(input: GraphEdgeInput): Promise<void>;
   loadAll(): Promise<EntityRecord[]>;
   loadScope(scope: OntologyScope): Promise<EntityRecord[]>;
+  listPage?(input: EntityListPageInput): Promise<EntityListPageResult>;
   close(): Promise<void>;
 }
 
@@ -25,6 +26,20 @@ export interface GraphEdgeInput {
   fromId: string;
   toId: string;
   relation: string;
+}
+
+export interface EntityListPageInput {
+  scope: OntologyScope;
+  ontologyId: string;
+  entityType?: string;
+  updatedAfter?: string;
+  limit: number;
+  cursor?: string;
+}
+
+export interface EntityListPageResult {
+  items: EntityRecord[];
+  nextCursor: string | null;
 }
 
 /** Postgres snapshot journal for durable entity state. */
@@ -183,6 +198,62 @@ export class PostgresEntityJournal implements EntityJournal {
         [scope.tenantId, scope.domainId],
       );
       return result.rows.map(rowToRecord);
+    });
+  }
+
+  async listPage(input: EntityListPageInput): Promise<EntityListPageResult> {
+    await this.ensureSchema();
+    const limit = Math.min(Math.max(input.limit, 1), 200);
+    return withTenantSession(this.pg, input.scope.tenantId, async (client) => {
+      const params: unknown[] = [
+        input.scope.tenantId,
+        input.scope.domainId,
+        input.ontologyId,
+      ];
+      const filters: string[] = [
+        "tenant_id = $1",
+        "domain_id = $2",
+        "ontology_id = $3",
+      ];
+      if (input.entityType) {
+        params.push(input.entityType);
+        filters.push(`entity_type = $${params.length}`);
+      }
+      if (input.updatedAfter) {
+        params.push(input.updatedAfter);
+        filters.push(`updated_at >= $${params.length}::timestamptz`);
+      }
+      if (input.cursor) {
+        params.push(input.cursor);
+        filters.push(`entity_id > $${params.length}`);
+      }
+      params.push(limit + 1);
+      const result = await client.query<{
+        tenant_id: string;
+        domain_id: string;
+        ontology_id: string;
+        entity_id: string;
+        entity_type: string | null;
+        properties: Record<string, unknown>;
+        version: number;
+        updated_at: Date;
+      }>(
+        `SELECT tenant_id, domain_id, ontology_id, entity_id, entity_type,
+                properties, version, updated_at
+         FROM daemon_entity_snapshots
+         WHERE ${filters.join(" AND ")}
+         ORDER BY entity_id ASC
+         LIMIT $${params.length}`,
+        params,
+      );
+      const rows = result.rows.map(rowToRecord);
+      let nextCursor: string | null = null;
+      let items = rows;
+      if (rows.length > limit) {
+        items = rows.slice(0, limit);
+        nextCursor = items[items.length - 1]?.entityId ?? null;
+      }
+      return { items, nextCursor };
     });
   }
 

@@ -41,7 +41,10 @@ describe("foundation ontology pack", () => {
     assert.ok(resolved.entityTypes.includes("Party"));
     assert.ok(resolved.entityTypes.includes("Account"));
     assert.ok(resolved.entityTypes.includes("Shipment"));
+    assert.ok(resolved.entityTypes.includes("Opportunity"));
+    assert.ok(resolved.entityTypes.includes("Conversation"));
     assert.ok(resolved.models.has("Shipment"));
+    assert.ok(resolved.models.has("Opportunity"));
     assert.ok(resolved.junctions.has("ShipmentLeg"));
     const leg = resolved.junctions.get("ShipmentLeg")!;
     const ok = leg.validateMembership({

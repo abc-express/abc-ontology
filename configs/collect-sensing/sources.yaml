@@ -1,5 +1,6 @@
 # Ingest source catalog — connector + normalization → gateway ontology upsert.
 # File paths are relative to repository root (DAEMON_REPO_ROOT or cwd).
+# Set DAEMON_PARITY_FIXTURES=1 to enable fixture-http-pull and fixture-postgres-read at runtime.
 sources:
   - id: demo-parties
     enabled: true
@@ -17,3 +18,46 @@ sources:
       idField: partyId
       meta:
         source: demo-parties
+
+  - id: fixture-http-pull
+    enabled: false
+    connector:
+      type: http-pull
+      url: http://127.0.0.1:0/fixtures/parties.json
+      method: GET
+    normalize:
+      ontologyId: foundation
+      entityType: Party
+      mapping:
+        partyId: partyId
+        name: displayName
+      idField: partyId
+
+  - id: fixture-postgres-read
+    enabled: false
+    connector:
+      type: postgres-read
+      sql: |
+        SELECT 'pg-party-1' AS party_id, 'Postgres Fixture' AS name
+    normalize:
+      ontologyId: foundation
+      entityType: Party
+      mapping:
+        party_id: partyId
+        name: displayName
+      idField: party_id
+
+  - id: fixture-jdbc-cdc
+    enabled: false
+    connector:
+      type: jdbc-cdc
+      table: daemon_ingest_schedules
+      cursorColumn: updated_at
+      recordIdColumn: id
+    normalize:
+      ontologyId: foundation
+      entityType: IngestSchedule
+      mapping:
+        id: entityId
+        source_id: sourceId
+      idField: id

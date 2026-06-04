@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Daemon Workshop Lite</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        font-family: system-ui, sans-serif;
+        color: #0f172a;
+        background: #f8fafc;
+      }
+      body {
+        margin: 0;
+        padding: 1.5rem;
+      }
+      h1 {
+        font-size: 1.25rem;
+        margin: 0 0 1rem;
+      }
+      label {
+        display: block;
+        font-size: 0.875rem;
+        margin-bottom: 0.25rem;
+      }
+      input,
+      select,
+      button {
+        font: inherit;
+        padding: 0.5rem;
+        margin-bottom: 0.75rem;
+      }
+      #entities {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      #entities li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #e2e8f0;
+      }
+      .error {
+        color: #b91c1c;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Workshop Lite — read-only entity browser</h1>
+    <p>
+      Point at a running gateway. Uses <code>GET /v1/read/entities</code> (no
+      mocks).
+    </p>
+    <label for="base">Gateway base URL</label>
+    <input id="base" type="url" value="http://127.0.0.1:3000" />
+    <label for="ontology">Ontology</label>
+    <input id="ontology" value="foundation" />
+    <label for="entityType">Entity type</label>
+    <select id="entityType">
+      <option value="Party">Party</option>
+      <option value="Case">Case</option>
+      <option value="Organization">Organization</option>
+    </select>
+    <button type="button" id="load">Load entities</button>
+    <p id="status"></p>
+    <ul id="entities"></ul>
+    <script>
+      const $ = (id) => document.getElementById(id);
+      $("load").addEventListener("click", async () => {
+        const base = $("base").value.replace(/\/$/, "");
+        const ontologyId = $("ontology").value;
+        const entityType = $("entityType").value;
+        const status = $("status");
+        const list = $("entities");
+        list.innerHTML = "";
+        status.textContent = "Loading…";
+        status.className = "";
+        try {
+          const url = new URL(`${base}/v1/read/entities`);
+          url.searchParams.set("ontologyId", ontologyId);
+          url.searchParams.set("entityType", entityType);
+          url.searchParams.set("limit", "25");
+          const res = await fetch(url, {
+            headers: {
+              "X-Daemon-Tenant": "inst-alpha",
+              "X-Daemon-Domain": "foundation",
+            },
+          });
+          if (!res.ok) throw new Error(`${res.status} ${await res.text()}`);
+          const body = await res.json();
+          status.textContent = `${body.items?.length ?? 0} entities`;
+          for (const item of body.items ?? []) {
+            const li = document.createElement("li");
+            li.textContent = `${item.entityId} — ${JSON.stringify(item.properties ?? {})}`;
+            list.appendChild(li);
+          }
+        } catch (e) {
+          status.textContent = String(e);
+          status.className = "error";
+        }
+      });
+    </script>
+  </body>
+</html>
