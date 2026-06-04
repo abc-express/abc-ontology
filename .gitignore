@@ -13,3 +13,6 @@ coverage/
 docs/private/sources/
 docs/private/extracted/
 docs/private/client-definition/
+
+# Local CodeQL analysis artifacts (CI uses .github/codeql/)
+static_analysis_codeql_1/

@@ -1,0 +1,13 @@
+name: daemon-sdk
+disable-default-queries: true
+queries:
+  - uses: ./important-only.qls
+paths-ignore:
+  - "**/node_modules/**"
+  - "**/dist/**"
+  - "**/target/**"
+  - "**/.turbo/**"
+  - "**/.cursor/**"
+  - "**/static_analysis_codeql*/**"
+  - "**/*.test.ts"
+  - "**/*.test.tsx"
