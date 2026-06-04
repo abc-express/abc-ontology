@@ -10,6 +10,7 @@ const PROPAGATION_TARGETS = new Set([
   "read-model-projection",
   "audit-loop",
   "graph-edge-sync",
+  "neo4j-graph-sync",
   "materialized-view:case-by-status",
   "materialized-view:party-by-kind",
 ]);
@@ -20,6 +21,7 @@ const REQUIRED_GATEWAY_POLICY_PAIRS = [
   { action: "ingest", resource: "ingest-job" },
   { action: "ingest", resource: "ingest-source" },
   { action: "ingest", resource: "ingest-record" },
+  { action: "query", resource: "ontology-nl" },
 ];
 
 function fail(msg) {

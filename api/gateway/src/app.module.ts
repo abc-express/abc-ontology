@@ -10,6 +10,7 @@ import { AutomationsModule } from "./automations/automations.module";
 import { ObservabilityModule } from "./observability/observability.module";
 import { PlatformModule } from "./platform/platform.module";
 import { GovernanceModule } from "./governance/governance.module";
+import { QueryModule } from "./query/query.module";
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { GovernanceModule } from "./governance/governance.module";
     IngestModule,
     AnalyticsModule,
     AutomationsModule,
+    QueryModule,
   ],
 })
 export class AppModule {}

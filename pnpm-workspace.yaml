@@ -10,6 +10,7 @@ packages:
   - "security-governance"
   - "action-runtime"
   - "products"
+  - "products/ontology-query"
   - "api/graphql"
   - "api/rest"
   - "api/grpc"

@@ -17,3 +17,6 @@ actions:
   - id: ingest
     resource: ingest-source
     effect: allow
+  - id: query
+    resource: ontology-nl
+    effect: allow

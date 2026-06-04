@@ -8,6 +8,9 @@
       "operational-store": ["./dist/operational-store/postgres-client.d.ts"],
       "cache": ["./dist/cache/redis-client.d.ts"],
       "graph-store": ["./dist/graph-store/postgres-graph-store.d.ts"],
+      "graph-store/neo4j-graph-store": [
+        "./dist/graph-store/neo4j-graph-store.d.ts"
+      ],
       "operational-store/entity-journal": [
         "./dist/operational-store/entity-journal.d.ts"
       ],
@@ -36,6 +39,11 @@
     },
     "./cache": "./dist/cache/redis-client.js",
     "./graph-store": "./dist/graph-store/postgres-graph-store.js",
+    "./graph-store/neo4j-graph-store": {
+      "types": "./dist/graph-store/neo4j-graph-store.d.ts",
+      "import": "./dist/graph-store/neo4j-graph-store.js",
+      "default": "./dist/graph-store/neo4j-graph-store.js"
+    },
     "./event-bus": "./dist/event-bus/nats-publisher.js",
     "./migrations": {
       "types": "./dist/migrations/run-migrations.d.ts",
@@ -51,6 +59,7 @@
   },
   "dependencies": {
     "@daemon/context-ports": "workspace:*",
+    "neo4j-driver": "^5.28.1",
     "pg": "^8.13.1",
     "redis": "^4.7.0"
   },

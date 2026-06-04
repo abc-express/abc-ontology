@@ -42,6 +42,36 @@ async function waitRedis(maxMs = 60_000) {
   throw new Error(`redis not ready: ${redisUrl}`);
 }
 
+async function waitNeo4jBolt(maxMs = 90_000) {
+  const uri = process.env.DAEMON_NEO4J_URI;
+  if (!uri) return;
+  const { default: net } = await import("node:net");
+  const parsed = new URL(uri.replace(/^bolt\+ssc?:\/\//, "bolt://"));
+  const host = parsed.hostname || "127.0.0.1";
+  const port = Number(parsed.port || 7687);
+  const start = Date.now();
+  while (Date.now() - start < maxMs) {
+    const ok = await new Promise((resolve) => {
+      const socket = net.connect({ host, port }, () => {
+        socket.end();
+        resolve(true);
+      });
+      socket.on("error", () => resolve(false));
+      socket.setTimeout(2000, () => {
+        socket.destroy();
+        resolve(false);
+      });
+    });
+    if (ok) return;
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  throw new Error(`neo4j bolt not ready: ${uri}`);
+}
+
 await waitPg();
 await waitRedis();
-console.log("postgres and redis are ready");
+await waitNeo4jBolt();
+const neo4jNote = process.env.DAEMON_NEO4J_URI
+  ? "neo4j bolt port open"
+  : "neo4j skipped (DAEMON_NEO4J_URI unset)";
+console.log(`postgres and redis are ready; ${neo4jNote}`);

@@ -6,6 +6,7 @@ rules:
     entityTypes: [Case]
     propagate:
       - read-model-projection
+      - neo4j-graph-sync
       - materialized-view:case-by-status
   - id: case-patch
     trigger: patch
@@ -26,12 +27,22 @@ rules:
     propagate:
       - read-model-projection
       - graph-edge-sync
+      - neo4j-graph-sync
+  - id: link-patch
+    trigger: patch
+    entityTypes: [Link]
+    propagate:
+      - read-model-projection
+      - graph-edge-sync
+      - neo4j-graph-sync
   - id: default-register
     trigger: register
     propagate:
       - read-model-projection
+      - neo4j-graph-sync
   - id: default-patch
     trigger: patch
     propagate:
       - read-model-projection
       - audit-loop
+      - neo4j-graph-sync

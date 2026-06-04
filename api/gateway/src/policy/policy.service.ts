@@ -4,7 +4,7 @@ import type { PolicyDecision } from "@daemon/platform-types";
 function devDefaultDecision(action: string, resource: string): PolicyDecision {
   const allowed =
     ((action === "read" || action === "write") && resource === "entity") ||
-    (action === "query" && resource === "analytics") ||
+    (action === "query" && (resource === "analytics" || resource === "ontology-nl")) ||
     (action === "ingest" && resource.startsWith("ingest"));
   return {
     effect: allowed ? "allow" : "deny",

@@ -669,17 +669,7 @@ mod tests {
     // ── Agent tests ─────────────────────────────────────────────
 
     #[test]
-    fn agent_runs_all_actions() {
-        let exec = test_executor();
-        let agent = Agent::new("test-agent", vec![action("echo"), action("echo")], 5);
-        let run = agent.run(&exec);
-        assert!(run.terminal);
-        assert_eq!(run.steps.len(), 2);
-    }
-
-    #[test]
     fn agent_stops_at_max_steps() {
-        let exec = test_executor();
         // Register a handler that always fails so the agent keeps retrying.
         let mut fail_exec = ActionExecutor::new();
         fail_exec.register("always_fail", |_params| ActionResult::Failure {

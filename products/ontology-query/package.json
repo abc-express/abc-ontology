@@ -1,0 +1,32 @@
+{
+  "name": "@daemon/ontology-query",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/ontology-query-chain.js",
+  "types": "./dist/ontology-query-chain.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/ontology-query-chain.d.ts",
+      "import": "./dist/ontology-query-chain.js",
+      "default": "./dist/ontology-query-chain.js"
+    },
+    "./validate-cypher.js": "./dist/validate-cypher.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test --import tsx \"**/*.test.ts\"",
+    "lint": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@daemon/context-ports": "workspace:*",
+    "@daemon/data-platform": "workspace:*",
+    "@daemon/ontology": "workspace:*",
+    "@langchain/core": "^1.0.0",
+    "@langchain/langgraph": "^1.0.0",
+    "@langchain/openrouter": "^0.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

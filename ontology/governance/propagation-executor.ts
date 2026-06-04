@@ -4,6 +4,7 @@ import type { GovernanceManifest } from "./ontology-governance.js";
 import type { EntityReadModelProjection } from "../projections/read-models/entity-read-model.js";
 import type { MaterializedView } from "../projections/materialized-views/materialized-view.js";
 import type { GraphEdgeSyncPort } from "./propagation-graph-sync.js";
+import type { Neo4jGraphSync } from "../graph-sync/neo4j-graph-sync.js";
 
 export type PropagationTrigger = "register" | "patch";
 
@@ -21,12 +22,14 @@ export interface PropagationTargets {
   audit: AuditPort;
   materializedViews: Map<string, MaterializedView>;
   graphEdgeSync?: GraphEdgeSyncPort;
+  neo4jGraphSync?: Neo4jGraphSync;
 }
 
 const KNOWN_TARGETS = new Set([
   "read-model-projection",
   "audit-loop",
   "graph-edge-sync",
+  "neo4j-graph-sync",
 ]);
 
 function isMaterializedViewTarget(target: string): string | undefined {
@@ -106,6 +109,10 @@ export class PropagationExecutor {
     }
     if (target === "graph-edge-sync") {
       this.targets.graphEdgeSync?.sync(ctx.record, ctx.scope);
+    }
+    if (target === "neo4j-graph-sync") {
+      if (!this.targets.neo4jGraphSync) return;
+      this.targets.neo4jGraphSync.sync(ctx.record, ctx.scope);
     }
   }
 }

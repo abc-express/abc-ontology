@@ -1,66 +1,92 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { DaemonError } from "@daemon/platform-types";
-import { RelationModel } from "./relation-model.js";
+import {
+  RelationModel,
+  parseRelationDefinition,
+} from "./relation-model.js";
 
 describe("RelationModel", () => {
-  it("links and queries many-to-many", () => {
+  it("validates required link properties", () => {
     const rel = new RelationModel({
-      name: "member-of",
-      from: "user",
-      to: "group",
-      cardinality: "many-to-many",
+      relationType: "member-of",
+      fromEntityTypes: ["Party"],
+      toEntityTypes: ["Organization"],
     });
-    rel.link("u1", "g1");
-    rel.link("u1", "g2");
-    rel.link("u2", "g1");
-    assert.deepEqual(rel.targetsOf("u1").sort(), ["g1", "g2"]);
-    assert.deepEqual(rel.sourcesOf("g1").sort(), ["u1", "u2"]);
+    const result = rel.validateLinkProperties({
+      linkType: "member-of",
+      fromEntityType: "Party",
+      toEntityType: "Organization",
+      fromEntityId: "party-1",
+      toEntityId: "org-1",
+    });
+    assert.equal(result.valid, true);
+    assert.deepEqual(result.issues, []);
   });
 
-  it("enforces one-to-many on target", () => {
+  it("rejects missing linkType and entity ids", () => {
     const rel = new RelationModel({
-      name: "owns",
-      from: "user",
-      to: "device",
-      cardinality: "one-to-many",
+      relationType: "member-of",
+      fromEntityTypes: ["Party"],
+      toEntityTypes: ["Organization"],
     });
-    rel.link("u1", "d1");
-    rel.link("u1", "d2");
-    assert.throws(() => rel.link("u2", "d1"), DaemonError);
+    const result = rel.validateLinkProperties({});
+    assert.equal(result.valid, false);
+    assert.ok(result.issues.some((i) => i.field === "linkType"));
+    assert.ok(result.issues.some((i) => i.field === "fromEntityId"));
+    assert.ok(result.issues.some((i) => i.field === "toEntityId"));
   });
 
-  it("enforces one-to-one", () => {
+  it("rejects entity types outside relation definition", () => {
     const rel = new RelationModel({
-      name: "passport",
-      from: "user",
-      to: "passport",
-      cardinality: "one-to-one",
+      relationType: "owns",
+      fromEntityTypes: ["Party"],
+      toEntityTypes: ["Case"],
     });
-    rel.link("u1", "p1");
-    assert.throws(() => rel.link("u1", "p2"), DaemonError);
-    assert.throws(() => rel.link("u2", "p1"), DaemonError);
+    const result = rel.validateLinkProperties({
+      linkType: "owns",
+      fromEntityType: "Organization",
+      toEntityType: "Case",
+      fromEntityId: "a",
+      toEntityId: "b",
+    });
+    assert.equal(result.valid, false);
+    assert.ok(result.issues.some((i) => i.field === "fromEntityType"));
   });
 
-  it("is idempotent for repeated identical links", () => {
+  it("exposes definition getters", () => {
     const rel = new RelationModel({
-      name: "passport",
-      from: "user",
-      to: "passport",
-      cardinality: "one-to-one",
+      relationType: "passport",
+      fromEntityTypes: ["Party"],
+      toEntityTypes: ["Document"],
+      cardinality: "one",
     });
-    rel.link("u1", "p1");
-    rel.link("u1", "p1");
-    assert.deepEqual(rel.targetsOf("u1"), ["p1"]);
+    assert.equal(rel.relationType, "passport");
+    assert.deepEqual(rel.fromEntityTypes, ["Party"]);
+    assert.deepEqual(rel.toEntityTypes, ["Document"]);
+  });
+});
+
+describe("parseRelationDefinition", () => {
+  it("parses from/to aliases", () => {
+    const def = parseRelationDefinition({
+      relationType: "Link",
+      from: ["Party"],
+      to: ["Case"],
+    });
+    assert.equal(def.relationType, "Link");
+    assert.deepEqual(def.fromEntityTypes, ["Party"]);
+    assert.deepEqual(def.toEntityTypes, ["Case"]);
   });
 
-  it("rejects blank ids", () => {
-    const rel = new RelationModel({
-      name: "r",
-      from: "a",
-      to: "b",
-      cardinality: "many-to-many",
-    });
-    assert.throws(() => rel.link("", "x"), DaemonError);
+  it("requires relationType and endpoints", () => {
+    assert.throws(
+      () => parseRelationDefinition({ relationType: "", from: ["A"], to: ["B"] }),
+      DaemonError,
+    );
+    assert.throws(
+      () => parseRelationDefinition({ relationType: "r", from: [], to: ["B"] }),
+      DaemonError,
+    );
   });
 });

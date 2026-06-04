@@ -24,6 +24,8 @@ Public packs stay sector-agnostic (foundation). Do not copy logistics-specific e
 | Pack manifest / semver | `configs/ontology/packs/foundation/pack.yaml` | `tests/ontology/pack-compliance.test.ts` |
 | Relations / junction rules | `configs/ontology/packs/foundation/relations/`, `junctions/` | `pnpm run check:ontology-pack` |
 | Action catalog (governed actions) | `configs/governance/action-catalog.yaml` | policy fixtures; gateway `@PolicyCheck` |
+| Competency questions (NL QA) | `docs/09-ontology-competency-questions.md` | `products/ontology-query` LangGraph chain |
+| Graph read model (Neo4j) | `docs/10-neo4j-graph-model.md` | `neo4j-graph-sync`, backfill CLI |
 | Domain catalog | `configs/ontology/domains/catalog.yaml` | `pnpm run check:tenancy-config` |
 | Runtime registration / patch | `ontology/governance/`, `DaemonRuntime`, gateway ingest/write | HTTP 400 for unknown `entityType` |
 
@@ -31,7 +33,7 @@ Public packs stay sector-agnostic (foundation). Do not copy logistics-specific e
 
 | Concept | Implementation | Runtime hook |
 |---------|----------------|--------------|
-| Propagation (register/patch → surfaces) | `configs/governance/propagation.yaml` | `PropagationExecutor` (entity-scoped rules) → `read-model-projection`, `audit-loop`, `materialized-view:case-by-status`, `materialized-view:party-by-kind`, `graph-edge-sync` (Link) |
+| Propagation (register/patch → surfaces) | `configs/governance/propagation.yaml` | `PropagationExecutor` → `read-model-projection`, `audit-loop`, materialized views, `graph-edge-sync` (Link), `neo4j-graph-sync` (entities + links) |
 | DAEMON vs operational systems | [02-bounded-contexts.md](./02-bounded-contexts.md) | Gateway = semantic control plane; collect-sensing = ingest only |
 | Multi-tenant / multi-domain rollout | `configs/tenancy.yaml` + `X-Daemon-Tenant` / `X-Daemon-Domain` | `TenantContextService`, scoped store keys |
 | Workflows / agents | `action-runtime/` via `products/automations/` | Gateway `/v1/automations/*` |

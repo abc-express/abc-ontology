@@ -109,3 +109,45 @@ sequenceDiagram
   end
   GW-->>Client: job accepted
 ```
+
+## Natural-language ontology query (Neo4j)
+
+When `DAEMON_NEO4J_URI` and `DAEMON_ONTOLOGY_QUERY_ENABLED=1` are set, the gateway exposes `POST /v1/query/ask`. Writes still flow through propagation into Neo4j (`neo4j-graph-sync`).
+
+```mermaid
+sequenceDiagram
+  participant Client
+  participant GW as NestGateway
+  participant TC as TenantContext
+  participant OQ as OntologyQueryChain
+  participant N4j as Neo4j
+  Client->>GW: POST /v1/query/ask
+  GW->>TC: resolve tenant/domain
+  GW->>OQ: ask(question)
+  OQ->>OQ: generate Cypher (OpenRouter)
+  OQ->>OQ: validate read-only + tenant params
+  OQ->>N4j: runReadQuery
+  OQ->>OQ: summarize answer (OpenRouter)
+  OQ-->>Client: answer, optional cypher preview
+```
+
+## Natural-language ontology query (Neo4j)
+
+When `DAEMON_NEO4J_URI` and `DAEMON_ONTOLOGY_QUERY_ENABLED=1` are set, the gateway exposes `POST /v1/query/ask`. Writes still flow through propagation into Neo4j (`neo4j-graph-sync`).
+
+```mermaid
+sequenceDiagram
+  participant Client
+  participant GW as NestGateway
+  participant TC as TenantContext
+  participant OQ as OntologyQueryChain
+  participant N4j as Neo4j
+  Client->>GW: POST /v1/query/ask
+  GW->>TC: resolve tenant/domain
+  GW->>OQ: ask(question)
+  OQ->>OQ: generate Cypher (OpenRouter)
+  OQ->>OQ: validate read-only + tenant params
+  OQ->>N4j: runReadQuery
+  OQ->>OQ: summarize answer (OpenRouter)
+  OQ-->>Client: answer, optional cypher preview
+```

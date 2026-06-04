@@ -25,7 +25,10 @@
     "./packs/pack-diff.js": "./dist/packs/pack-diff.js",
     "./projections/read-models/entity-read-model.js": "./dist/projections/read-models/entity-read-model.js",
     "./projections/materialized-views/materialized-view.js": "./dist/projections/materialized-views/materialized-view.js",
-    "./packs/merge-packs.js": "./dist/packs/merge-packs.js"
+    "./packs/merge-packs.js": "./dist/packs/merge-packs.js",
+    "./graph-schema/pack-graph-schema.js": "./dist/graph-schema/pack-graph-schema.js",
+    "./graph-sync/neo4j-graph-sync.js": "./dist/graph-sync/neo4j-graph-sync.js",
+    "./graph-sync/neo4j-backfill.js": "./dist/graph-sync/neo4j-backfill.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

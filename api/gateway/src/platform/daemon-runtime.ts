@@ -28,6 +28,9 @@ import { loadFoundationPack } from "@daemon/ontology/packs/load-pack.js";
 import { EntityReadModelProjection } from "@daemon/ontology/projections/read-models/entity-read-model.js";
 import { MaterializedView } from "@daemon/ontology/projections/materialized-views/materialized-view.js";
 import { GraphEdgeSyncPort } from "@daemon/ontology/governance/propagation-graph-sync.js";
+import { Neo4jGraphSync } from "@daemon/ontology/graph-sync/neo4j-graph-sync.js";
+import { buildPackGraphSchema } from "@daemon/ontology/graph-schema/pack-graph-schema.js";
+import { Neo4jGraphStore } from "@daemon/data-platform/graph-store/neo4j-graph-store";
 import type { ResolvedPack } from "@daemon/ontology/packs/pack-resolver.js";
 import { StructuredLogger } from "@daemon/observability/logging/structured-logger.js";
 import {
@@ -49,6 +52,7 @@ export const DEFAULT_GATEWAY_POLICY_RULES: PolicyRule[] = [
   { action: "ingest", resource: "ingest-record", effect: "allow" },
   { action: "ingest", resource: "ingest-job", effect: "allow" },
   { action: "ingest", resource: "ingest-source", effect: "allow" },
+  { action: "query", resource: "ontology-nl", effect: "allow" },
 ];
 
 function resolveGatewayPolicyRules(): PolicyRule[] {
@@ -91,6 +95,7 @@ export class DaemonRuntime {
   readonly materializedViews: Map<string, MaterializedView>;
   readonly propagation: PropagationExecutor;
   readonly actionCatalog: ActionCatalogManifest | undefined;
+  readonly neo4jStore: Neo4jGraphStore | null;
   private readonly workflows = new WorkflowOrchestrator();
 
   constructor(options: DaemonRuntimeOptions = {}) {
@@ -136,11 +141,16 @@ export class DaemonRuntime {
         ),
       ],
     ]);
+    this.neo4jStore = Neo4jGraphStore.fromEnv();
+    const neo4jGraphSync = this.neo4jStore
+      ? new Neo4jGraphSync(this.neo4jStore)
+      : undefined;
     this.propagation = new PropagationExecutor(this.governance.propagationRules(), {
       projection: this.projection,
       audit: this.audit,
       materializedViews: this.materializedViews,
       graphEdgeSync: new GraphEdgeSyncPort(this.audit),
+      neo4jGraphSync,
     });
     this.wireSemanticLayer();
   }
@@ -387,6 +397,11 @@ export async function initDaemonRuntime(
         store = await createOntologyStoreFromEnv(env);
       }
       singleton = new DaemonRuntime({ store });
+      const neo4j = singleton.neo4jStore;
+      if (neo4j) {
+        const schema = buildPackGraphSchema();
+        await neo4j.ensureSchema(schema.constraintStatements);
+      }
       singleton.assertProductionSsot(env);
       return singleton;
     })();

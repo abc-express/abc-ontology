@@ -311,4 +311,23 @@ describe("gateway HTTP", () => {
       await close();
     }
   });
+
+  it("ontology NL query returns 503 when feature is disabled", async () => {
+    const { baseUrl, close } = await createGatewayTestApp({
+      DAEMON_AUTH_MODE: "dev",
+      DAEMON_ONTOLOGY_QUERY_ENABLED: "0",
+    });
+    try {
+      const res = await fetch(`${baseUrl}/v1/query/ask`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ question: "How many cases exist?" }),
+      });
+      assert.equal(res.status, 503);
+      const body = (await res.json()) as { message?: string };
+      assert.match(body.message ?? "", /disabled/i);
+    } finally {
+      await close();
+    }
+  });
 });
