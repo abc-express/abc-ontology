@@ -1,7 +1,7 @@
 import type { OntologyId } from "@daemon/platform-types";
 import { defaultOntology } from "@daemon/ontology";
 import { ProductRuntime } from "../shared/product-runtime.js";
-import { QueryWizard, type QueryWizardRequest } from "./query-wizard.js";
+import { normalizeSearchQuery, QueryWizard, type QueryWizardRequest } from "./query-wizard.js";
 import { ReportGenerator, type AnalyticsReport } from "./report-generator.js";
 import {
   DashboardBuilder,
@@ -35,9 +35,8 @@ export class AnalyticsWorkflows {
 
   async searchAndReport(req: SearchReportRequest): Promise<AnalyticsReport> {
     const records = await this.query.search(req);
-    const title =
-      req.reportTitle ??
-      (req.query.trim() ? `Search: ${req.query.trim()}` : "Ontology search");
+    const query = normalizeSearchQuery(req.query);
+    const title = req.reportTitle ?? (query ? `Search: ${query}` : "Ontology search");
     return this.reports.generate(title, records);
   }
 

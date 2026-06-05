@@ -87,6 +87,7 @@ jobs:
         run: pnpm run db:migrate
       - name: Repo integration tests
         env:
+          DAEMON_API_KEY: daemon-dev-key
           DAEMON_POSTGRES_URL: postgresql://daemon_app:daemon_app@localhost:5432/daemon
           DAEMON_REDIS_URL: redis://localhost:6379
           DAEMON_INTEGRATION_REQUIRED: "1"

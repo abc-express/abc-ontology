@@ -80,7 +80,8 @@ Local stack includes Neo4j 5 when using `pnpm run dev:up`:
 ```bash
 export DAEMON_NEO4J_URI=bolt://127.0.0.1:7687
 export DAEMON_NEO4J_USER=neo4j
-export DAEMON_NEO4J_PASSWORD=daemon-dev-neo4j
+# Match your local compose stack — do not commit real credentials
+export DAEMON_NEO4J_PASSWORD="${DAEMON_NEO4J_PASSWORD:?set from .env or dev:up compose}"
 # Optional read-only role for query execution (defaults to credentials above)
 # export DAEMON_NEO4J_QUERY_USER=...
 # export DAEMON_NEO4J_QUERY_PASSWORD=...

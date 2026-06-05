@@ -3,9 +3,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createGatewayTestApp } from "../helpers/gateway-test-app.js";
+import { syntheticTestApiKey } from "../helpers/test-api-keys.js";
 import { skipUnlessPostgresReady } from "../helpers/postgres-integration.js";
 
-const ABC_API_KEY = "abc-parity-key";
 const TENANT = "abc-antero";
 const DOMAIN = "logistics";
 const ONTOLOGY = "foundation";
@@ -38,10 +38,13 @@ interface GoldenSummary {
   };
 }
 
-function authHeaders(extra: Record<string, string> = {}): Record<string, string> {
+function authHeaders(
+  apiKey: string,
+  extra: Record<string, string> = {},
+): Record<string, string> {
   return {
     "content-type": "application/json",
-    "x-api-key": ABC_API_KEY,
+    "x-api-key": apiKey,
     "x-daemon-tenant": TENANT,
     "x-daemon-domain": DOMAIN,
     ...extra,
@@ -60,19 +63,20 @@ describe("antero shadow parity golden e2e", () => {
     const goldenPath = join(repoRoot, "tests/fixtures/abc-express/golden-summary.json");
     const golden = JSON.parse(readFileSync(goldenPath, "utf8")) as GoldenSummary;
 
+    const abcApiKey = syntheticTestApiKey("abc-parity");
     const { baseUrl, close } = await createGatewayTestApp({
       DAEMON_POSTGRES_URL: postgresUrl,
       DAEMON_REPO_ROOT: repoRoot,
       DAEMON_AUTH_MODE: "dev",
       DAEMON_ABC_FIXTURES: "1",
-      DAEMON_API_KEYS: `${ABC_API_KEY}:abc-parity:${TENANT}:admin|logistics-viewer`,
+      DAEMON_API_KEYS: `${abcApiKey}:abc-parity:${TENANT}:admin|logistics-viewer`,
     });
 
     try {
       for (const sourceId of FIXTURE_SOURCES) {
         const runRes = await fetch(`${baseUrl}/v1/ingest/sources/${sourceId}/run`, {
           method: "POST",
-          headers: authHeaders(),
+          headers: authHeaders(abcApiKey),
           body: JSON.stringify({}),
         });
         const runText = await runRes.text();
@@ -84,7 +88,7 @@ describe("antero shadow parity golden e2e", () => {
       for (const [entityType, expectedCount] of Object.entries(golden.entityCounts)) {
         const listRes = await fetch(
           `${baseUrl}/v1/read/entities?ontologyId=${ONTOLOGY}&entityType=${encodeURIComponent(entityType)}&limit=200`,
-          { headers: authHeaders() },
+          { headers: authHeaders(abcApiKey) },
         );
         assert.equal(listRes.status, 200, await listRes.text());
         const listBody = (await listRes.json()) as { items: unknown[] };
@@ -97,7 +101,7 @@ describe("antero shadow parity golden e2e", () => {
 
       const shipmentRes = await fetch(
         `${baseUrl}/v1/read/entities?ontologyId=${ONTOLOGY}&entityType=Shipment&limit=50`,
-        { headers: authHeaders() },
+        { headers: authHeaders(abcApiKey) },
       );
       const shipmentBody = (await shipmentRes.json()) as {
         items: { properties: Record<string, unknown> }[];
@@ -112,7 +116,7 @@ describe("antero shadow parity golden e2e", () => {
 
       const pricingRes = await fetch(`${baseUrl}/v1/products/shadow-pricing/simulate`, {
         method: "POST",
-        headers: authHeaders(),
+        headers: authHeaders(abcApiKey),
         body: JSON.stringify({
           ontologyId: ONTOLOGY,
           shipmentRef: sample.externalRef,

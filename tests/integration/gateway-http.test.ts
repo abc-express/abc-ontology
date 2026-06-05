@@ -1,20 +1,16 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { createGatewayTestApp, DEV_API_KEY } from "../helpers/gateway-test-app.js";
+import { createGatewayTestApp, devApiKey } from "../helpers/gateway-test-app.js";
+import { syntheticTestApiKey } from "../helpers/test-api-keys.js";
 import { startMockIngestServer } from "../helpers/mock-ingest-server.js";
 
 const FOUNDATION = "foundation";
 const ENT = "ent-http-1";
-const BETA_API_KEY = "beta-dev-key";
-const LOGISTICS_API_KEY = "logistics-dev-key";
-
-const MULTI_TENANT_API_KEYS = `${DEV_API_KEY}:dev:inst-alpha:admin,${BETA_API_KEY}:dev:ent-beta:admin`;
-const LOGISTICS_API_KEYS = `${LOGISTICS_API_KEY}:dev:logistics-pilot:admin`;
 
 function authHeaders(
   extra: Record<string, string> = {},
-  apiKey = DEV_API_KEY,
+  apiKey = devApiKey(),
 ): Record<string, string> {
   return {
     "content-type": "application/json",
@@ -173,16 +169,18 @@ describe("gateway HTTP", () => {
   });
 
   it("isolates entities per tenant header", async () => {
+    const alphaKey = devApiKey();
+    const betaKey = syntheticTestApiKey("beta");
     const { baseUrl, close } = await createGatewayTestApp({
       DAEMON_INGEST_SKIP_UPSTREAM: "1",
       DAEMON_AUTH_MODE: "dev",
-      DAEMON_API_KEYS: MULTI_TENANT_API_KEYS,
+      DAEMON_API_KEYS: `${alphaKey}:dev:inst-alpha:admin,${betaKey}:dev:ent-beta:admin`,
     });
     const sharedId = "shared-tenant-ent";
     try {
       for (const [tenant, name, apiKey] of [
-        ["inst-alpha", "Alpha Party", DEV_API_KEY],
-        ["ent-beta", "Beta Party", BETA_API_KEY],
+        ["inst-alpha", "Alpha Party", alphaKey],
+        ["ent-beta", "Beta Party", betaKey],
       ] as const) {
         const res = await fetch(`${baseUrl}/v1/ingest/records`, {
           method: "POST",
@@ -229,7 +227,7 @@ describe("gateway HTTP", () => {
               "x-daemon-tenant": "ent-beta",
               "x-daemon-domain": "foundation",
             },
-            BETA_API_KEY,
+            betaKey,
           ),
         },
       );
@@ -302,10 +300,11 @@ describe("gateway HTTP", () => {
   });
 
   it("ingests logistics-commercial P1 entities on logistics domain", async () => {
+    const logisticsKey = syntheticTestApiKey("logistics");
     const { baseUrl, close } = await createGatewayTestApp({
       DAEMON_INGEST_SKIP_UPSTREAM: "1",
       DAEMON_AUTH_MODE: "dev",
-      DAEMON_API_KEYS: LOGISTICS_API_KEYS,
+      DAEMON_API_KEYS: `${logisticsKey}:dev:logistics-pilot:admin`,
     });
     try {
       const res = await fetch(`${baseUrl}/v1/ingest/records`, {
@@ -315,7 +314,7 @@ describe("gateway HTTP", () => {
             "x-daemon-tenant": "logistics-pilot",
             "x-daemon-domain": "logistics",
           },
-          LOGISTICS_API_KEY,
+          logisticsKey,
         ),
         body: JSON.stringify({
           sourceId: "logistics-p1",
@@ -364,7 +363,7 @@ describe("gateway HTTP", () => {
               "x-daemon-tenant": "logistics-pilot",
               "x-daemon-domain": "logistics",
             },
-            LOGISTICS_API_KEY,
+            logisticsKey,
           ),
         },
       );
@@ -377,10 +376,11 @@ describe("gateway HTTP", () => {
   });
 
   it("ingests logistics-commercial P0 entities on logistics domain", async () => {
+    const logisticsKey = syntheticTestApiKey("logistics");
     const { baseUrl, close } = await createGatewayTestApp({
       DAEMON_INGEST_SKIP_UPSTREAM: "1",
       DAEMON_AUTH_MODE: "dev",
-      DAEMON_API_KEYS: LOGISTICS_API_KEYS,
+      DAEMON_API_KEYS: `${logisticsKey}:dev:logistics-pilot:admin`,
     });
     try {
       const res = await fetch(`${baseUrl}/v1/ingest/records`, {
@@ -390,7 +390,7 @@ describe("gateway HTTP", () => {
             "x-daemon-tenant": "logistics-pilot",
             "x-daemon-domain": "logistics",
           },
-          LOGISTICS_API_KEY,
+          logisticsKey,
         ),
         body: JSON.stringify({
           sourceId: "logistics-p0",
@@ -438,7 +438,7 @@ describe("gateway HTTP", () => {
               "x-daemon-tenant": "logistics-pilot",
               "x-daemon-domain": "logistics",
             },
-            LOGISTICS_API_KEY,
+            logisticsKey,
           ),
         },
       );

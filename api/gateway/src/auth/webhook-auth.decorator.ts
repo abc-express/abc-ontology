@@ -1,6 +1,7 @@
 import { SetMetadata } from "@nestjs/common";
 
-export const WEBHOOK_AUTH_KEY = "daemon:webhook-auth";
+/** Nest metadata key (not a credential). */
+export const WEBHOOK_AUTH_KEY = Symbol.for("daemon.gateway.webhookRoute");
 
 /**
  * Machine ingress routes (webhooks, listeners). No user session required;

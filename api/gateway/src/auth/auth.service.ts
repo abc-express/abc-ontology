@@ -250,9 +250,10 @@ export class AuthService {
       }
     }
     const nodeEnv = env.NODE_ENV ?? "development";
-    if (keys.size === 0 && mode === "dev" && nodeEnv !== "production") {
-      keys.set("daemon-dev-key", {
-        key: "daemon-dev-key",
+    const devKey = env.DAEMON_API_KEY?.trim();
+    if (keys.size === 0 && mode === "dev" && nodeEnv !== "production" && devKey) {
+      keys.set(devKey, {
+        key: devKey,
         subjectId: "dev",
         tenantId: "inst-alpha",
         roles: ["admin"],

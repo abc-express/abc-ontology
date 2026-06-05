@@ -164,7 +164,10 @@ test("automations run evaluate and approve", async () => {
   await withServer(async (base) => {
     const runRes = await fetch(`${base}/v1/automations/run`, {
       method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": "daemon-dev-key" },
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": process.env.DAEMON_API_KEY ?? "rest-unit-test-key",
+      },
       body: JSON.stringify({
         steps: [{ id: "s1", action: "notify" }],
         loop: {
@@ -190,7 +193,10 @@ test("automations run evaluate and approve", async () => {
 
     const approveRes = await fetch(`${base}/v1/automations/approve`, {
       method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": "daemon-dev-key" },
+      headers: {
+        "content-type": "application/json",
+        "x-api-key": process.env.DAEMON_API_KEY ?? "rest-unit-test-key",
+      },
       body: JSON.stringify({
         loop: {
           ontologyId: ont,

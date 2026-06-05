@@ -306,6 +306,8 @@ function sendError(res: ServerResponse, err: unknown): void {
   if (err instanceof DaemonError) {
     return sendJson(res, err.status, { code: err.code, message: err.message });
   }
-  const message = err instanceof Error ? err.message : String(err);
-  sendJson(res, 500, { code: ErrorCodes.INTERNAL, message });
+  restLogger.error("unhandled_error", {
+    message: err instanceof Error ? err.message : String(err),
+  });
+  sendJson(res, 500, { code: ErrorCodes.INTERNAL, message: "internal server error" });
 }

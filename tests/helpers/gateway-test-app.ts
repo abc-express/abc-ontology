@@ -5,6 +5,7 @@ import { AppModule } from "../../api/gateway/dist/app.module.js";
 import { DaemonExceptionFilter } from "../../api/gateway/dist/daemon-exception.filter.js";
 import { resetDaemonRuntimeForTests } from "../../api/gateway/src/platform/daemon-runtime.js";
 import { resolvePostgresUrlForTests } from "./postgres-integration.js";
+import { primaryTestApiKey } from "./test-api-keys.js";
 
 export type GatewayTestApp = {
   app: INestApplication;
@@ -29,6 +30,9 @@ export async function createGatewayTestApp(
     }
   }
   resetDaemonRuntimeForTests();
+  if (!testEnv.DAEMON_API_KEY?.trim()) {
+    testEnv.DAEMON_API_KEY = primaryTestApiKey(testEnv);
+  }
   Object.assign(process.env, testEnv);
   if (!testEnv.DAEMON_POSTGRES_URL) {
     delete process.env.DAEMON_POSTGRES_URL;
@@ -50,7 +54,9 @@ export async function createGatewayTestApp(
   };
 }
 
-export const DEV_API_KEY = "daemon-dev-key";
+export function devApiKey(env: NodeJS.ProcessEnv = process.env): string {
+  return primaryTestApiKey(env);
+}
 
 /** Tenant/domain headers expected by {@link TenantContextService}. */
 export function daemonTenantHeaders(

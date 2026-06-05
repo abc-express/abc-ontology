@@ -7,6 +7,10 @@ import re
 import sys
 from pathlib import Path
 
+from _path_utils import resolve_under
+
+SCRIPT_DIR = Path(__file__).parent
+
 
 def extract_snapshot(mcp_text: str) -> dict:
     # MCP wraps SQL result in untrusted-data tags
@@ -27,7 +31,7 @@ def main() -> int:
     if len(sys.argv) != 3:
         print("usage: parse_mcp_snapshot.py <mcp_output.txt> <out_snapshot.json>", file=sys.stderr)
         return 1
-    src = Path(sys.argv[1]).read_text()
+    src = resolve_under(SCRIPT_DIR, sys.argv[1]).read_text()
     if src.strip().startswith("{"):
         try:
             wrapper = json.loads(src)
@@ -35,7 +39,7 @@ def main() -> int:
         except json.JSONDecodeError:
             pass
     snapshot = extract_snapshot(src)
-    out = Path(sys.argv[2])
+    out = resolve_under(SCRIPT_DIR, sys.argv[2])
     out.write_text(json.dumps(snapshot, default=str, indent=2))
     total = sum(len(v) if isinstance(v, list) else 0 for v in snapshot.values())
     print(f"wrote {out} ({len(snapshot)} tables, {total} rows)")

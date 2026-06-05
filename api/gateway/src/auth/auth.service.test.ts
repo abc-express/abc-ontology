@@ -24,12 +24,14 @@ test("assertBootConfig allows production with explicit API keys", () => {
   );
 });
 
-test("dev mode injects default dev key when NODE_ENV is not production", async () => {
+test("dev mode injects DAEMON_API_KEY when NODE_ENV is not production", async () => {
+  const devKey = "test-dev-api-key";
   const svc = AuthService.create({
     NODE_ENV: "development",
     DAEMON_AUTH_MODE: "dev",
+    DAEMON_API_KEY: devKey,
   });
-  const session = await svc.resolveSession({ "x-api-key": "daemon-dev-key" });
+  const session = await svc.resolveSession({ "x-api-key": devKey });
   assert.ok(session);
   assert.equal(session?.tenantId, "inst-alpha");
   assert.ok(session?.roles.includes("admin"));
