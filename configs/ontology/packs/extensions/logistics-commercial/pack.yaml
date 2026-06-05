@@ -18,5 +18,7 @@ entityTypes:
   - Manifest
   - Dispatch
   - RoutingDecision
+  - Location
+  - ServiceAreaCoverage
 junctionTypes:
   - ShipmentLeg

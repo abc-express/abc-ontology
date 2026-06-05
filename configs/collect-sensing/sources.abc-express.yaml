@@ -298,6 +298,53 @@ sources:
         pack: logistics-commercial
         connector: obl-v3
 
+  - id: abc-fixture-locations
+    enabled: false
+    scope:
+      tenantId: abc-antero
+      domainId: logistics
+    connector:
+      type: file
+      format: jsonl
+      path: tests/fixtures/abc-express/locations.jsonl
+    normalize:
+      ontologyId: foundation
+      entityType: Location
+      mapping:
+        source_pk: externalRef
+        name: displayName
+        province_name: provinceName
+        kab_kota_code: kabKotaCode
+      idField: externalRef
+      meta:
+        source: abc-fixture-locations
+        pack: logistics-commercial
+
+  - id: abc-fixture-service-areas
+    enabled: false
+    scope:
+      tenantId: abc-antero
+      domainId: logistics
+    connector:
+      type: file
+      format: jsonl
+      path: tests/fixtures/abc-express/service-area-coverage.jsonl
+    normalize:
+      ontologyId: foundation
+      entityType: ServiceAreaCoverage
+      mapping:
+        coverage_id: externalRef
+        location_id: locationRef
+        coverage_status: coverageStatus
+        serving_ro: servingRo
+        serving_agent: servingAgent
+        sla_hours: slaHours
+        is_3t: is3t
+      idField: externalRef
+      meta:
+        source: abc-fixture-service-areas
+        pack: logistics-commercial
+
   - id: abc-obl-v3
     enabled: false
     scope:
