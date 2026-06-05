@@ -68,7 +68,11 @@ test("openapi document is served", async () => {
       "/v1/ingest/jobs",
       "/v1/ingest/records",
       "/v1/query/ask",
+      "/v1/query/ask/stream",
       "/v1/products/customer-gpt/chat",
+      "/v1/products/customer-gpt/chat/stream",
+      "/v1/agents/sessions/{sessionId}/run",
+      "/v1/agents/sessions/{sessionId}/stream",
       "/v1/policy/check",
       "/v1/automations/run",
     ];

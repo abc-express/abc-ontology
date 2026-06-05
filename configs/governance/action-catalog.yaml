@@ -32,6 +32,9 @@ actions:
   - id: chat
     resource: customer-gpt
     effect: allow
+  - id: chat
+    resource: agent-worker
+    effect: allow
   - id: read
     resource: agent-session
     effect: allow

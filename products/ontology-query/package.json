@@ -3,15 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "./dist/ontology-query-chain.js",
-  "types": "./dist/ontology-query-chain.d.ts",
+  "main": "./dist/ontology-query/ontology-query-chain.js",
+  "types": "./dist/ontology-query/ontology-query-chain.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/ontology-query-chain.d.ts",
-      "import": "./dist/ontology-query-chain.js",
-      "default": "./dist/ontology-query-chain.js"
+      "types": "./dist/ontology-query/ontology-query-chain.d.ts",
+      "import": "./dist/ontology-query/ontology-query-chain.js",
+      "default": "./dist/ontology-query/ontology-query-chain.js"
     },
-    "./validate-cypher.js": "./dist/validate-cypher.js"
+    "./validate-cypher.js": "./dist/ontology-query/validate-cypher.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",

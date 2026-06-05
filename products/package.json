@@ -17,6 +17,12 @@
     "./automations/approval-runner.js": "./dist/automations/approval-runner.js",
     "./customer-gpt/gpt-orchestrator.js": "./dist/customer-gpt/gpt-orchestrator.js",
     "./ontology-query/llm.js": "./dist/ontology-query/llm.js",
+    "./shared/openrouter-model.js": "./dist/shared/openrouter-model.js",
+    "./shared/structured-output.js": "./dist/shared/structured-output.js",
+    "./shared/llm-stream.js": "./dist/shared/llm-stream.js",
+    "./agent-worker/run-agent-worker.js": "./dist/agent-worker/run-agent-worker.js",
+    "./agent-worker/schemas.js": "./dist/agent-worker/schemas.js",
+    "./agent-orchestrator/supervisor.js": "./dist/agent-orchestrator/supervisor.js",
     "./pipeline-builder/pipeline-runner.js": "./dist/pipeline-builder/pipeline-runner.js",
     "./aip-evals/eval-runner.js": "./dist/aip-evals/eval-runner.js",
     "./data-health/data-health-product.js": "./dist/data-health/data-health-product.js"
@@ -28,12 +34,17 @@
   },
   "dependencies": {
     "@daemon/action-runtime": "workspace:*",
+    "@daemon/context-ports": "workspace:*",
+    "@daemon/data-platform": "workspace:*",
     "@daemon/ontology": "workspace:*",
     "@daemon/platform-types": "workspace:*",
     "@daemon/read-write-loops": "workspace:*",
     "@daemon/security-governance": "workspace:*",
-    "@langchain/core": "^1.0.0",
-    "@langchain/openrouter": "^0.3.0"
+    "@langchain/core": "^1.1.48",
+    "@langchain/langgraph": "^1.3.3",
+    "@langchain/openrouter": "^0.3.0",
+    "deepagents": "^1.10.2",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "tsx": "^4.19.2",

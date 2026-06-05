@@ -1,5 +1,6 @@
 import type { DaemonSession } from "@daemon/platform-types";
 import { DaemonError, ErrorCodes } from "@daemon/platform-types";
+import { parseSseStream, type SseEvent } from "./sse.js";
 import type {
   AutomationsApproveRequest,
   AutomationsEvaluateRequest,
@@ -153,6 +154,16 @@ export class DaemonClient {
     });
   }
 
+  async queryAskStream(
+    body: QueryAskRequest,
+    onEvent?: (event: SseEvent) => void,
+  ): Promise<SseEvent[]> {
+    return this.requestSse("POST", "/v1/query/ask/stream", {
+      body: JSON.stringify(body),
+      onEvent,
+    });
+  }
+
   async customerGptChat(
     body: CustomerGptChatRequest,
     sessionId?: string,
@@ -162,6 +173,19 @@ export class DaemonClient {
     return this.request("POST", "/v1/products/customer-gpt/chat", {
       body: JSON.stringify(body),
       headers,
+    });
+  }
+
+  async customerGptChatStream(
+    body: CustomerGptChatRequest,
+    options?: { sessionId?: string; onEvent?: (event: SseEvent) => void },
+  ): Promise<SseEvent[]> {
+    const headers: Record<string, string> = {};
+    if (options?.sessionId) headers["x-session-id"] = options.sessionId;
+    return this.requestSse("POST", "/v1/products/customer-gpt/chat/stream", {
+      body: JSON.stringify(body),
+      headers,
+      onEvent: options?.onEvent,
     });
   }
 
@@ -249,6 +273,29 @@ export class DaemonClient {
     return this.request("POST", "/v1/agents/sessions", {
       body: JSON.stringify(body ?? {}),
     });
+  }
+
+  async agentSessionRun(
+    sessionId: string,
+    body: { message: string },
+  ): Promise<Record<string, unknown>> {
+    return this.request(
+      "POST",
+      `/v1/agents/sessions/${encodeURIComponent(sessionId)}/run`,
+      { body: JSON.stringify(body) },
+    );
+  }
+
+  async agentSessionStream(
+    sessionId: string,
+    body: { message: string },
+    onEvent?: (event: SseEvent) => void,
+  ): Promise<SseEvent[]> {
+    return this.requestSse(
+      "POST",
+      `/v1/agents/sessions/${encodeURIComponent(sessionId)}/stream`,
+      { body: JSON.stringify(body), onEvent },
+    );
   }
 
   async invokeFunction(
@@ -379,6 +426,51 @@ export class DaemonClient {
       `/v1/agents/sessions/${encodeURIComponent(sessionId)}/tools`,
       { body: JSON.stringify(body) },
     );
+  }
+
+  private async requestSse(
+    method: string,
+    path: string,
+    init?: RequestInit & { onEvent?: (event: SseEvent) => void },
+  ): Promise<SseEvent[]> {
+    const session = this.getSession ? await this.getSession() : null;
+    const headers: Record<string, string> = {
+      accept: "text/event-stream",
+      "content-type": "application/json",
+      ...(init?.headers as Record<string, string>),
+    };
+    if (session) {
+      headers["x-daemon-session"] = JSON.stringify(session);
+    }
+    if (this.config.tenantId) {
+      headers["x-daemon-tenant"] = this.config.tenantId;
+    }
+    if (this.config.domainId) {
+      headers["x-daemon-domain"] = this.config.domainId;
+    }
+    if (this.config.apiKey) {
+      headers["x-api-key"] = this.config.apiKey;
+    }
+    const { onEvent, ...rest } = init ?? {};
+    const res = await this.fetchFn(`${this.config.baseUrl}${path}`, {
+      ...rest,
+      method,
+      headers,
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new DaemonError(
+        res.status === 403 ? ErrorCodes.POLICY_DENIED : ErrorCodes.INTERNAL,
+        text || res.statusText,
+        res.status,
+      );
+    }
+    const events: SseEvent[] = [];
+    for await (const ev of parseSseStream(res.body)) {
+      onEvent?.(ev);
+      events.push(ev);
+    }
+    return events;
   }
 
   private async request<T>(

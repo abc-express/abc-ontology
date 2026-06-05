@@ -1,33 +1,17 @@
-import { ChatOpenRouter } from "@langchain/openrouter";
+import type { ChatOpenRouter } from "@langchain/openrouter";
 import { HumanMessage, SystemMessage } from "@langchain/core/messages";
+
+export {
+  buildProviderConfig,
+  createChatOpenRouter,
+  createOpenRouterModel,
+  parseFallbackModels,
+  resolveOpenRouterApiKey,
+} from "../shared/openrouter-model.js";
 
 export type TextLlm = {
   complete(system: string, user: string): Promise<string>;
 };
-
-export function resolveOpenRouterApiKey(
-  env: NodeJS.ProcessEnv = process.env,
-): string | undefined {
-  return env.OPENROUTER_API_KEY ?? env.DAEMON_OPENROUTER_API_KEY;
-}
-
-export function createChatOpenRouter(
-  env: NodeJS.ProcessEnv = process.env,
-): ChatOpenRouter {
-  const apiKey = resolveOpenRouterApiKey(env);
-  if (!apiKey) {
-    throw new Error("OPENROUTER_API_KEY or DAEMON_OPENROUTER_API_KEY is required");
-  }
-  return new ChatOpenRouter({
-    model:
-      env.DAEMON_ONTOLOGY_QUERY_MODEL ?? "anthropic/claude-sonnet-4.5",
-    temperature: 0,
-    maxTokens: 2048,
-    apiKey,
-    siteUrl: env.DAEMON_OPENROUTER_SITE_URL,
-    siteName: env.DAEMON_OPENROUTER_SITE_NAME ?? "daemon-sdk",
-  });
-}
 
 export function chatOpenRouterAsLlm(model: ChatOpenRouter): TextLlm {
   return {

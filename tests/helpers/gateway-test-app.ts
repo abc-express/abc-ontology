@@ -13,12 +13,26 @@ export type GatewayTestApp = {
   close: () => Promise<void>;
 };
 
+let gatewayTestEnvLock: Promise<void> = Promise.resolve();
+
 /** Boots the Nest gateway on a random port for HTTP integration tests. */
 export async function createGatewayTestApp(
   env: NodeJS.ProcessEnv = process.env,
 ): Promise<GatewayTestApp> {
+  let releaseLock!: () => void;
+  const prevLock = gatewayTestEnvLock;
+  gatewayTestEnvLock = new Promise<void>((resolve) => {
+    releaseLock = resolve;
+  });
+  await prevLock;
+
   const prev = { ...process.env };
-  const testEnv = { ...env };
+  const testEnv = { ...process.env, ...env };
+  for (const [key, value] of Object.entries(env)) {
+    if (value === undefined) {
+      delete testEnv[key];
+    }
+  }
   // Use durable Postgres only when the URL is configured and accepting connections.
   const requested = testEnv.DAEMON_POSTGRES_URL;
   if (requested) {
@@ -34,6 +48,11 @@ export async function createGatewayTestApp(
     testEnv.DAEMON_API_KEY = primaryTestApiKey(testEnv);
   }
   Object.assign(process.env, testEnv);
+  for (const [key, value] of Object.entries(env)) {
+    if (value === undefined) {
+      delete process.env[key];
+    }
+  }
   if (!testEnv.DAEMON_POSTGRES_URL) {
     delete process.env.DAEMON_POSTGRES_URL;
   }
@@ -50,6 +69,12 @@ export async function createGatewayTestApp(
     async close() {
       await app.close();
       Object.assign(process.env, prev);
+      for (const key of Object.keys(process.env)) {
+        if (!(key in prev)) {
+          delete process.env[key];
+        }
+      }
+      releaseLock();
     },
   };
 }

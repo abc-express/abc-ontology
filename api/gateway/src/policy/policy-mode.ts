@@ -33,5 +33,8 @@ export function requiresUpstreamPolicyDecision(
   if (action === "ingest") {
     return resource.startsWith("ingest");
   }
+  if (action === "chat") {
+    return resource === "customer-gpt" || resource === "agent-worker";
+  }
   return false;
 }

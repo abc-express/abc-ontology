@@ -2,8 +2,8 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "rootDir": "."
+    "rootDir": ".."
   },
-  "include": ["**/*.ts"],
+  "include": ["**/*.ts", "../shared/openrouter-model.ts", "../shared/structured-output.ts", "../shared/llm-stream.ts"],
   "exclude": ["dist", "node_modules", "**/*.test.ts"]
 }

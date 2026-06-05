@@ -362,6 +362,31 @@ export const openApiDocument = {
         },
       },
     },
+    "/v1/query/ask/stream": {
+      post: {
+        operationId: "queryAskStream",
+        summary: "Stream natural-language ontology query (SSE)",
+        parameters: [...TENANCY_HEADER_PARAMS],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/QueryAskRequest" },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Server-sent events (token, node, done, error)",
+            content: {
+              "text/event-stream": {
+                schema: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+    },
     "/v1/products/customer-gpt/chat": {
       post: {
         operationId: "customerGptChat",
@@ -384,6 +409,34 @@ export const openApiDocument = {
             content: {
               "application/json": {
                 schema: { type: "object", additionalProperties: true },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/v1/products/customer-gpt/chat/stream": {
+      post: {
+        operationId: "customerGptChatStream",
+        summary: "Stream customer GPT chat (SSE)",
+        parameters: [
+          ...TENANCY_HEADER_PARAMS,
+          { name: "x-session-id", in: "header", schema: { type: "string" } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/CustomerGptChatRequest" },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Server-sent events (token, node, done, error)",
+            content: {
+              "text/event-stream": {
+                schema: { type: "string" },
               },
             },
           },
@@ -991,6 +1044,80 @@ export const openApiDocument = {
             content: {
               "application/json": {
                 schema: { $ref: "#/components/schemas/GenericObject" },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/v1/agents/sessions/{sessionId}/run": {
+      post: {
+        operationId: "agentSessionRun",
+        summary: "Run agent supervisor on a session message",
+        parameters: [
+          ...TENANCY_HEADER_PARAMS,
+          {
+            name: "sessionId",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["message"],
+                properties: { message: { type: "string" } },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Supervisor reply",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/GenericObject" },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/v1/agents/sessions/{sessionId}/stream": {
+      post: {
+        operationId: "agentSessionStream",
+        summary: "Stream agent supervisor (SSE)",
+        parameters: [
+          ...TENANCY_HEADER_PARAMS,
+          {
+            name: "sessionId",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                required: ["message"],
+                properties: { message: { type: "string" } },
+              },
+            },
+          },
+        },
+        responses: {
+          "200": {
+            description: "Server-sent events (token, tool_start, tool_end, node, done, error)",
+            content: {
+              "text/event-stream": {
+                schema: { type: "string" },
               },
             },
           },

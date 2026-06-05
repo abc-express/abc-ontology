@@ -63,6 +63,7 @@ export const DEFAULT_GATEWAY_POLICY_RULES: PolicyRule[] = [
   { action: "query", resource: "analytics", effect: "allow" },
   { action: "read", resource: "lakehouse", effect: "allow" },
   { action: "chat", resource: "customer-gpt", effect: "allow" },
+  { action: "chat", resource: "agent-worker", effect: "allow" },
   { action: "read", resource: "agent-session", effect: "allow" },
   { action: "read", resource: "function-invoke", effect: "allow" },
   { action: "ingest", resource: "ingest-schedule", effect: "allow" },

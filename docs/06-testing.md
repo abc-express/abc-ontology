@@ -110,5 +110,29 @@ export DAEMON_ONTOLOGY_QUERY_MODEL=anthropic/claude-sonnet-4.5
 | `products/ontology-query/validate-cypher.test.ts` | Read-only Cypher guard |
 | `tests/integration/ontology-neo4j-sync.integration.test.ts` | Propagation sync upsert (gated) |
 | `tests/integration/ontology-query.integration.test.ts` | LangGraph chain with mock LLM (gated) |
+| `products/shared/openrouter-model.test.ts` | OpenRouter factory env (`data_collection: deny` default) |
+| `api/gateway/src/streaming/sse.test.ts` | SSE framing round-trip |
+| `products/agent-worker/daemon-tools.test.ts` | Read-only agent tool allowlist |
+| `products/agent-orchestrator/router.test.ts` | Supervisor intent routing heuristics |
+| `tests/integration/agent-worker.integration.test.ts` | Gateway agent session run (no OpenRouter) |
+| `tests/integration/gateway-security.test.ts` | Stream endpoints require credentials |
 
 Neo4j integration tests skip unless Bolt is reachable (`skipUnlessNeo4jReady` in `tests/helpers/neo4j-integration.ts`). No OpenRouter key is required in CI for ontology-query tests (mock LLM).
+
+### Streaming LLM (SSE)
+
+Gateway stream routes (require auth + policy):
+
+- `POST /v1/query/ask/stream`
+- `POST /v1/products/customer-gpt/chat/stream`
+- `POST /v1/agents/sessions/:id/stream`
+
+Sync counterparts remain for backward compatibility. Local dev without `OPENROUTER_API_KEY` still returns deterministic customer-GPT and agent `rag_chat` paths.
+
+```bash
+curl -N -H "X-Api-Key: daemon-dev-key" -H "Content-Type: application/json" \
+  -d '{"turns":[{"role":"user","content":"hello"}]}' \
+  http://localhost:3000/v1/products/customer-gpt/chat/stream
+```
+
+SDK: `customerGptChatStream`, `queryAskStream`, `agentSessionStream` on `DaemonClient` (see `packages/sdk/src/sse.ts`).

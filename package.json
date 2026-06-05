@@ -8,6 +8,7 @@
     "test": "turbo run test",
     "lint": "turbo run lint",
     "dev:gateway": "pnpm exec turbo run build --filter=@daemon/api-gateway^... && DAEMON_API_KEY=daemon-dev-key DAEMON_INGEST_SKIP_UPSTREAM=1 DAEMON_POLICY_SKIP_UPSTREAM=1 pnpm --filter @daemon/api-gateway dev",
+    "dev:console": "VITE_DAEMON_API_KEY=daemon-dev-key pnpm --filter @daemon/dsdk-console dev",
     "dev:up": "pnpm run build --filter @daemon/cli && pnpm exec daemon-cli dev up",
     "changeset": "changeset",
     "version-packages": "changeset version",

@@ -8,9 +8,14 @@ Minimal enterprise web shell for daemon-sdk: Connect, Pipeline, Ontology, Lakeho
 # From repo root
 pnpm install
 pnpm run dev:gateway   # terminal 1 — http://localhost:3000
+pnpm run dev:console   # terminal 2 — http://localhost:5173 (proxies /api → gateway)
+```
 
+Or from this package only:
+
+```bash
 cd apps/dsdk-console
-pnpm run dev           # terminal 2 — http://localhost:5173 (proxies /api → gateway)
+VITE_DAEMON_API_KEY=daemon-dev-key pnpm run dev
 ```
 
 Set in the UI or via env (Vite):

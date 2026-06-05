@@ -18,6 +18,7 @@ export const DEFAULT_PRODUCT_POLICY_RULES: PolicyRule[] = [
   { action: "admin", resource: "ontology", effect: "allow" },
   { action: "query", resource: "analytics", effect: "allow" },
   { action: "chat", resource: "customer-gpt", effect: "allow" },
+  { action: "chat", resource: "agent-worker", effect: "allow" },
 ];
 
 export interface ProductRuntimeOptions {

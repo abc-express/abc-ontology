@@ -80,6 +80,51 @@ describe("gateway security", () => {
     }
   });
 
+  it("stream endpoints require credentials", async () => {
+    const { baseUrl, close } = await createGatewayTestApp({
+      DAEMON_AUTH_MODE: "dev",
+      DAEMON_INGEST_SKIP_UPSTREAM: "1",
+    });
+    try {
+      const queryDenied = await fetch(`${baseUrl}/v1/query/ask/stream`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ question: "test" }),
+      });
+      assert.equal(queryDenied.status, 401);
+
+      const gptDenied = await fetch(
+        `${baseUrl}/v1/products/customer-gpt/chat/stream`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ turns: [{ role: "user", content: "hi" }] }),
+        },
+      );
+      assert.equal(gptDenied.status, 401);
+
+      const sessionRes = await fetch(`${baseUrl}/v1/agents/sessions`, {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({}),
+      });
+      assert.ok(sessionRes.status === 200 || sessionRes.status === 201);
+      const { sessionId } = (await sessionRes.json()) as { sessionId: string };
+
+      const agentDenied = await fetch(
+        `${baseUrl}/v1/agents/sessions/${encodeURIComponent(sessionId)}/stream`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ message: "hi" }),
+        },
+      );
+      assert.equal(agentDenied.status, 401);
+    } finally {
+      await close();
+    }
+  });
+
   it("policy probe requires authentication", async () => {
     const { baseUrl, close } = await createGatewayTestApp({
       DAEMON_AUTH_MODE: "dev",

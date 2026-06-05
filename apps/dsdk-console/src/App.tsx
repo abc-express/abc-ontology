@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { EvalSuiteInput, PipelineRunRequest } from "@daemon/sdk";
+import type { EvalSuiteInput, PipelineRunRequest, SseEvent } from "@daemon/sdk";
 import { createDaemonClient } from "./daemon-client.js";
 
 type Tab = "connect" | "pipeline" | "ontology" | "lakehouse" | "aip";
@@ -25,6 +25,9 @@ export function App() {
   const [out, setOut] = useState<string>("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [streamMode, setStreamMode] = useState(false);
+  const [agentSessionId, setAgentSessionId] = useState<string | null>(null);
+  const [aipMessage, setAipMessage] = useState("List entity types");
 
   async function run(label: string, fn: () => Promise<unknown>) {
     setLoading(true);
@@ -203,17 +206,104 @@ export function App() {
         {tab === "aip" && (
           <>
             <h2>AIP</h2>
+            <label className="row">
+              <input
+                type="checkbox"
+                checked={streamMode}
+                onChange={(e) => setStreamMode(e.target.checked)}
+              />
+              Stream responses (SSE)
+            </label>
+            <textarea
+              value={aipMessage}
+              onChange={(e) => setAipMessage(e.target.value)}
+              rows={3}
+              placeholder="Message for query / GPT / agent"
+            />
             <div className="row">
               <button
                 type="button"
                 disabled={loading}
                 onClick={() =>
-                  run("query-ask", () =>
-                    client.queryAsk({ question: "List entity types" }),
-                  )
+                  streamMode
+                    ? run("query-ask-stream", async () => {
+                        const events: SseEvent[] = [];
+                        await client.queryAskStream(
+                          { question: aipMessage },
+                          (ev) => events.push(ev),
+                        );
+                        return events;
+                      })
+                    : run("query-ask", () =>
+                        client.queryAsk({ question: aipMessage }),
+                      )
                 }
               >
                 Query ask
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() =>
+                  streamMode
+                    ? run("customer-gpt-stream", async () => {
+                        const events: SseEvent[] = [];
+                        await client.customerGptChatStream(
+                          {
+                            turns: [{ role: "user", content: aipMessage }],
+                          },
+                          { onEvent: (ev) => events.push(ev) },
+                        );
+                        return events;
+                      })
+                    : run("customer-gpt", () =>
+                        client.customerGptChat({
+                          turns: [{ role: "user", content: aipMessage }],
+                        }),
+                      )
+                }
+              >
+                Customer GPT
+              </button>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() =>
+                  run("agent-session", async () => {
+                    const session = await client.createAgentSession();
+                    const id = String(
+                      (session as { sessionId?: string }).sessionId ?? "",
+                    );
+                    setAgentSessionId(id || null);
+                    return session;
+                  })
+                }
+              >
+                New agent session
+              </button>
+              <button
+                type="button"
+                className="primary"
+                disabled={loading || !agentSessionId}
+                onClick={() => {
+                  const sid = agentSessionId;
+                  if (!sid) return;
+                  return streamMode
+                    ? run("agent-stream", async () => {
+                        const events: SseEvent[] = [];
+                        await client.agentSessionStream(
+                          sid,
+                          { message: aipMessage },
+                          (ev) => events.push(ev),
+                        );
+                        return events;
+                      })
+                    : run("agent-run", () =>
+                        client.agentSessionRun(sid, { message: aipMessage }),
+                      );
+                }}
+              >
+                Agent {streamMode ? "stream" : "run"}
               </button>
               <button
                 type="button"
@@ -225,6 +315,11 @@ export function App() {
                 Eval runs
               </button>
             </div>
+            {agentSessionId && (
+              <p>
+                Agent session: <code>{agentSessionId}</code>
+              </p>
+            )}
             <textarea id="eval-suite" defaultValue={DEFAULT_EVAL} />
             <div className="row">
               <button
