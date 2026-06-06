@@ -71,7 +71,7 @@ Technology OS eksplisit: *"manfaatkan platform terkelola Supabase/Vercel, jangan
 
 **Fase 1 — Read-only shadow (zero risiko ke ANTERO live).** 🟢 **In progress / artefak ter-ship:**
 - Tenancy ABC: `abc-antero`, `abc-arandy`, `abc-holding` di `configs/tenancy.yaml`; peran `logistics-viewer`, `commercial-analyst`, `abc-platform-admin` di `configs/governance/rbac.yaml`.
-- Ingest: `sources.abc-express.yaml` (fixture P0/P1 + stub Supabase read); aktif dengan `DAEMON_ABC_FIXTURES=1`.
+- Ingest: `sources.abc-express.yaml` (fixture P0/P1 + live `abc-antero-*` postgres-read); fixture aktif dengan `DAEMON_ABC_FIXTURES=1`, live shadow dengan `DAEMON_ABC_LIVE_INGEST=1` + `ANTERO_SUPABASE_DB_URL`.
 - Parity gate: `tests/integration/antero-shadow-parity.integration.test.ts` + job CI `antero-parity`.
 - ANTERO live tetap SSOT; tidak ada governed write ke Supabase di Fase 1.
 

@@ -5,6 +5,7 @@ import {
   type SourceConnectorConfig,
 } from "@daemon/collect-sensing/orchestrator/source-catalog";
 import { createConnectorForSource } from "@daemon/collect-sensing/connectors/connector-factory";
+import { QueryExecutorResolver } from "@daemon/collect-sensing/connectors/query-executor-resolver";
 import { RecordNormalizer } from "@daemon/collect-sensing/normalization/record-normalizer";
 import type { EntityPayload } from "@daemon/collect-sensing/normalization/record-normalizer";
 import { StreamPipeline } from "@daemon/collect-sensing/pipelines/stream-pipeline";
@@ -19,16 +20,19 @@ import {
 export class IngestPipelineService {
   private readonly catalog: SourceCatalog;
   private readonly stream = new StreamPipeline<IngestRecord>();
+  private readonly queryExecutorResolver: QueryExecutorResolver;
 
   constructor(
     private readonly ingest: IngestService,
     env: NodeJS.ProcessEnv = process.env,
+    queryExecutorResolver?: QueryExecutorResolver,
   ) {
     this.catalog = SourceCatalog.fromYamlFile();
+    this.queryExecutorResolver =
+      queryExecutorResolver ?? new QueryExecutorResolver(env);
     this.stream.on(async () => {
       /* hot-path hook — propagation subscribers register here in workers */
     });
-    void env;
   }
 
   static create(
@@ -43,7 +47,11 @@ export class IngestPipelineService {
     sourceId: string,
   ): Promise<IngestResult> {
     const source = this.catalog.require(sourceId);
-    const queryExecutor = await this.resolveQueryExecutor();
+    const defaultConnectionString = process.env.DAEMON_POSTGRES_URL?.trim();
+    const queryExecutor = await this.queryExecutorResolver.resolveForConnector(
+      source.connector,
+      defaultConnectionString,
+    );
     const connector = createConnectorForSource(source, {
       queryExecutor,
       cdcQueryExecutor: queryExecutor
@@ -75,24 +83,6 @@ export class IngestPipelineService {
       );
     }
     return this.ingest.persistIngestRecords(ctx, sourceId, records);
-  }
-
-  private async resolveQueryExecutor() {
-    const url = process.env.DAEMON_POSTGRES_URL;
-    if (!url) return undefined;
-    const { PostgresClient } = await import(
-      "@daemon/data-platform/operational-store"
-    );
-    const client = new PostgresClient({ connectionString: url });
-    return {
-      query: async <T extends Record<string, unknown>>(
-        sql: string,
-        params?: ReadonlyArray<unknown>,
-      ) => {
-        const result = await client.query<T>(sql, params ?? []);
-        return result.rows;
-      },
-    };
   }
 
   private async resolveEventSubscription(connector: SourceConnectorConfig) {

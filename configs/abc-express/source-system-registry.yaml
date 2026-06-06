@@ -23,6 +23,11 @@ sourceSystems:
       - Manifest
       - Dispatch
       - ServiceAreaCoverage
+      - Location
+      - PickupRequest
+      - RegionalOffice
+      - Evidence
+      - Project
     notes: >
       Primary operational ontology core candidate. POS/resi, manifest, dispatch,
       tracking, finance, master data.

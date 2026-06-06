@@ -25,6 +25,12 @@ const FIXTURE_SOURCES = [
   "abc-fixture-pipelines",
   "abc-fixture-signals",
   "abc-fixture-obl-manifests",
+  "abc-fixture-locations",
+  "abc-fixture-service-areas",
+  "abc-fixture-pickup-requests",
+  "abc-fixture-regional-offices",
+  "abc-fixture-evidence",
+  "abc-fixture-projects",
 ] as const;
 
 interface GoldenSummary {
@@ -34,6 +40,7 @@ interface GoldenSummary {
       externalRef: string;
       displayName: string;
       status: string;
+      noTtk?: string;
     };
   };
 }
@@ -113,6 +120,7 @@ describe("antero shadow parity golden e2e", () => {
       assert.ok(match, "sample shipment not found");
       assert.equal(match.properties.displayName, sample.displayName);
       assert.equal(match.properties.status, sample.status);
+      assert.equal(match.properties.noTtk, sample.noTtk);
 
       const pricingRes = await fetch(`${baseUrl}/v1/products/shadow-pricing/simulate`, {
         method: "POST",

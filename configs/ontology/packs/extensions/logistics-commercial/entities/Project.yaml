@@ -1,20 +1,17 @@
-entityType: Trip
+entityType: Project
 fields:
-  - name: tripCode
+  - name: displayName
     type: string
     required: true
+  - name: code
+    type: string
+    required: false
   - name: status
     type: string
     required: false
-  - name: transportMode
+  - name: accountRef
     type: string
     required: false
-  - name: vendorRef
-    type: string
-    required: false
-  - name: chargeableWeight
-    type: number
-    required: false
-  - name: plannedStartAt
+  - name: externalRef
     type: string
     required: false

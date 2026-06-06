@@ -18,17 +18,69 @@ tables:
 
   - name: pos
     primary_key: id
-    natural_keys: [resi_number, awb]
+    natural_keys: [resi_number, awb, no_ttk]
     row_count_estimate: 73822
     canonical_objects: [Shipment, TTK]
-    known_issues: POS/resi maps to Shipment and TTK; status lifecycle needs enum validation.
+    known_issues: >
+      OM Bab 5 — one Shipment pairs 1:1 with one TTK per pos row.
+      Multi-destination pickup creates N pos rows (N Shipments, N TTKs).
+
+  - name: pickup_request
+    primary_key: id
+    natural_keys: [code]
+    canonical_objects: [PickupRequest]
+    known_issues: parent intake for multi-shipment pickup.
+
+  - name: pickup_request_pos
+    primary_key: id
+    canonical_objects: [PickupShipment]
+    known_issues: junction PickupRequest ↔ Shipment (pos grain).
 
   - name: manifest
     primary_key: id
-    natural_keys: [manifest_number]
+    natural_keys: [manifest_number, code]
     row_count_estimate: 13364
     canonical_objects: [Manifest, ShipmentLeg]
     known_issues: manifest_detail is ShipmentLeg candidate source.
+
+  - name: manifest_detail
+    primary_key: id
+    canonical_objects: [ShipmentLeg]
+    known_issues: leg_type and chargeable_weight_kg map to ShipmentLeg.
+
+  - name: trip
+    primary_key: id
+    natural_keys: [code]
+    canonical_objects: [Trip]
+
+  - name: dispatch
+    primary_key: id
+    natural_keys: [code]
+    canonical_objects: [Dispatch]
+
+  - name: dispatch_detail
+    primary_key: id
+    canonical_objects: [DispatchShipment]
+    known_issues: junction Dispatch ↔ Shipment (pos grain).
+
+  - name: routing_decision
+    primary_key: id
+    canonical_objects: [RoutingDecision]
+
+  - name: kantor
+    primary_key: id
+    natural_keys: [code]
+    canonical_objects: [RegionalOffice]
+
+  - name: evidence_records
+    primary_key: id
+    canonical_objects: [Evidence]
+    known_issues: maps OM POD / evidence context.
+
+  - name: project
+    primary_key: id
+    natural_keys: [code]
+    canonical_objects: [Project]
 
   - name: city
     primary_key: id

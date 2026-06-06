@@ -1,6 +1,6 @@
 ontologyId: foundation
-version: 0.2.0
-description: Logistics commercial extension — dual-domain commercial and operational entities on foundation.
+version: 0.3.0
+description: Logistics commercial extension — OM v2.0.3 aligned dual-domain pack with Antero operational mapping.
 entityTypes:
   - Account
   - Contact
@@ -20,5 +20,11 @@ entityTypes:
   - RoutingDecision
   - Location
   - ServiceAreaCoverage
+  - PickupRequest
+  - Evidence
+  - RegionalOffice
+  - Project
 junctionTypes:
   - ShipmentLeg
+  - PickupShipment
+  - DispatchShipment

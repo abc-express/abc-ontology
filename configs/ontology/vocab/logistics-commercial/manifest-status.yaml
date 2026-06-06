@@ -1,0 +1,9 @@
+# Manifest lifecycle vocabulary
+vocabId: manifest-status
+domain: logistics
+values:
+  - prepare
+  - waiting
+  - ontheway
+  - arrived
+  - closed

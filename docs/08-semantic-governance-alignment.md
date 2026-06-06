@@ -98,20 +98,22 @@ Gateway controllers must not import `globalRegistry` or `CommandGateway` directl
 
 PDFs (Charter, Ontology Master, Technology OS) remain human reference only — not committed. Extension packs (e.g. sector catalogs) are out of scope for this epic.
 
-### Planned extension: logistics-commercial
+### Extension: logistics-commercial (Antero alignment v0.3)
 
 | Artifact | Path | Status |
 |----------|------|--------|
-| Public PRD stub | [PRD-logistics-commercial-extension.md](./PRD-logistics-commercial-extension.md) | R1/R2 P0+P1 implemented (v0.2.0) |
-| Extension pack | `configs/ontology/packs/extensions/logistics-commercial/` | **In scope (v0.2.0)** — 16 entity types + `ShipmentLeg` junction (P0+P1 per client definition) |
+| Public PRD stub | [PRD-logistics-commercial-extension.md](./PRD-logistics-commercial-extension.md) | v0.3.0 milestone — Antero semantic alignment |
+| Extension pack | `configs/ontology/packs/extensions/logistics-commercial/` | **v0.3.0** — dual-domain + PickupRequest, Evidence, RegionalOffice, Project |
 | Domain | `logistics` in `configs/ontology/domains/catalog.yaml` | **Enabled** — tenant `logistics-pilot` in `configs/tenancy.yaml` |
-| Propagation | `configs/governance/propagation.yaml` (`logistics-entity-register` / `logistics-entity-patch`) | **In scope** — all v0.2.0 entity types |
-| Competency (public) | [09-ontology-competency-questions.md](./09-ontology-competency-questions.md) | Logistics LQ-01–LQ-17 (P0+P1) |
-| Graph / NL | `buildPackGraphSchema` + ontology-query chain per tenant/domain | **Domain-aware** for logistics |
-| Pack resolution API | `GET /v1/ontology/pack-resolution` | Returns `packId`, `packVersion`, `entityTypes` per tenant/domain |
-| DSDK console | [apps/dsdk-console/](../apps/dsdk-console/) | Logistics entity types via pack-resolution |
+| Propagation | `configs/governance/propagation.yaml` (`logistics-entity-register` / `logistics-entity-patch`) | All v0.3.0 logistics entity types |
+| Competency (public) | [09-ontology-competency-questions.md](./09-ontology-competency-questions.md) | LQ-01–LQ-22 |
+| Graph / NL | `buildPackGraphSchema` + ontology-query chain per tenant/domain | Domain-aware for logistics |
+| Private crosswalk | `docs/private/extracted/om-v2.0.3-logistics-crosswalk.md` | OM v2.0.3 ↔ pack ↔ Antero (gitignored) |
+| Physical mapping | `docs/private/antero-physical-mapping.md` | Canonical ↔ Antero tables |
 
-Do not add logistics entity literals to `foundation` until the extension pack is approved and merged per the public PRD stub.
+**Commercial hierarchy (Ontology Master v2.0.3, Bab 5):** Account → Order (1:N) → Shipment (1:N) → TTK (1:1). Multi-destination pickup uses PickupRequest → N Shipments, each with one TTK. Junction `PickupShipment` connects PickupRequest to Shipment (not TTK). Operational hierarchy: Trip → Manifest → ShipmentLeg ↔ Shipment; Dispatch ↔ TTK via `DispatchShipment`.
+
+Do not add logistics entity literals to `foundation`. TP dollar fields (`allocatedVendorCost`, NLM amounts) stay out of pack YAML — magnitude lives in operational SSOT and TP Manual per OM principles 7–8.
 
 **Definition of done (commercial SSOT epic):** foundation relations/junctions in CI; propagation + projection wired; breaking schema changes require approvals per `governance-policies.yaml`; Postgres path includes change log, scoped graph edges, and RLS tests.
 

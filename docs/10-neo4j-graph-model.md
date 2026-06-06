@@ -7,7 +7,7 @@ Operational read model for natural-language graph queries. **SSOT** remains pack
 | Element | Description |
 |---------|-------------|
 | Primary label | `Entity` — all ontology entities |
-| Type label | Secondary label per `entityType` from the **resolved pack** for the request domain — foundation: `Party`, `Organization`, `Case`, `Event`, `Link`, `Document`; logistics extension (domain `logistics`): `Account`, `Contact`, `Order`, `Shipment`, `TTK`, `Manifest` |
+| Type label | Secondary label per `entityType` from the **resolved pack** for the request domain — foundation: `Party`, `Organization`, `Case`, `Event`, `Link`, `Document`; logistics extension (domain `logistics`, pack v0.3.0): `Account`, `Contact`, `Order`, `Shipment`, `TTK`, `Manifest`, `Trip`, `Dispatch`, `RoutingDecision`, `PickupRequest`, `Evidence`, `RegionalOffice`, `Project`, `Location`, `ServiceAreaCoverage`, plus commercial stubs (`Lead`, `Pipeline`, etc.) |
 | Identity | Composite key: `tenantId`, `domainId`, `ontologyId`, `entityId` |
 | Core properties | `entityType`, `version`, `updatedAt` plus pack fields copied from snapshot `properties` |
 
@@ -46,6 +46,16 @@ MATCH (a:Entity { tenantId: $t, domainId: $d, entityId: $from })
 MATCH (b:Entity { tenantId: $t, domainId: $d, entityId: $to })
 MERGE (a)-[r:LINK { linkType: $linkType, tenantId: $t, domainId: $d }]->(b)
 ```
+
+### Logistics junction patterns (v0.3.0)
+
+| Junction | Graph pattern |
+|----------|---------------|
+| `ShipmentLeg` | `Shipment` ↔ `Manifest` (multi-leg operational) |
+| `PickupShipment` | `PickupRequest` ↔ `Shipment` (1 pickup, N shipments) |
+| `DispatchShipment` | `Dispatch` ↔ `TTK` (last-mile assignment) |
+
+Commercial hierarchy (OM Bab 5): each `Shipment` links to exactly one `TTK` (`shipmentRef` / `LINK`). Multi-destination pickup expands to N Shipment nodes, not N TTKs on one Shipment.
 
 ## Sync sources
 

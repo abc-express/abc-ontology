@@ -64,7 +64,7 @@ function buildConnector(
     case "postgres-read": {
       if (!options.queryExecutor) {
         throw new Error(
-          `postgres-read connector for source ${sourceId} requires queryExecutor (set DAEMON_POSTGRES_URL)`,
+          `postgres-read connector for source ${sourceId} requires queryExecutor (set DAEMON_POSTGRES_URL or connector.connectionEnv)`,
         );
       }
       return new PostgresReadConnector(options.queryExecutor, {

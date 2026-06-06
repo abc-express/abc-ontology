@@ -52,6 +52,33 @@ curl -sS -X POST http://127.0.0.1:3000/v1/ingest/sources/demo-parties/run \
   -H "x-domain-id: foundation"
 ```
 
+### ABC Express shadow ingest (Antero read-only)
+
+Fixture parity (CI/local, no upstream credentials):
+
+```bash
+export DAEMON_ABC_FIXTURES=1
+export DAEMON_INTEGRATION_REQUIRED=1
+pnpm exec node --test tests/integration/antero-shadow-parity.integration.test.ts
+```
+
+Live shadow pull from Antero Supabase (read-only role; secrets via env only):
+
+```bash
+export DAEMON_POSTGRES_URL=postgresql://daemon_app:daemon_app@127.0.0.1:5432/daemon
+export ANTERO_SUPABASE_DB_URL=postgresql://...   # read-only session pooler
+export DAEMON_ABC_LIVE_INGEST=1
+export DAEMON_API_KEY=daemon-dev-key
+
+curl -sS -X POST http://127.0.0.1:3000/v1/ingest/sources/abc-antero-pos-ttk/run \
+  -H "content-type: application/json" \
+  -H "x-api-key: $DAEMON_API_KEY" \
+  -H "x-daemon-tenant: abc-antero" \
+  -H "x-daemon-domain: logistics"
+```
+
+Validate with `GET /v1/read/entities?ontologyId=foundation&entityType=TTK`. Sources are defined in `configs/collect-sensing/sources.abc-express.yaml` (`abc-antero-*`).
+
 ## Database migrations and durability
 
 Apply versioned SQL before integration tests or gateway boot with Postgres:

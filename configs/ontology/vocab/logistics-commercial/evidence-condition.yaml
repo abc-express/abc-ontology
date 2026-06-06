@@ -1,0 +1,12 @@
+# Evidence condition status vocabulary
+vocabId: evidence-condition
+domain: logistics
+values:
+  - OK
+  - DAMAGED
+  - WET
+  - DENTED
+  - TORN
+  - SHORT
+  - MISSING
+  - OTHER

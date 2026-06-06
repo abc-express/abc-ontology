@@ -9,3 +9,12 @@ fields:
   - name: accountRef
     type: string
     required: false
+  - name: ownerRoRef
+    type: string
+    required: false
+  - name: ownerUserRef
+    type: string
+    required: false
+  - name: estRevenue
+    type: number
+    required: false

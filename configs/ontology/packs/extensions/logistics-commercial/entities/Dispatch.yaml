@@ -1,8 +1,20 @@
 entityType: Dispatch
 fields:
+  - name: displayName
+    type: string
+    required: true
+  - name: code
+    type: string
+    required: false
   - name: status
     type: string
     required: true
+  - name: courierRef
+    type: string
+    required: false
+  - name: originOfficeRef
+    type: string
+    required: false
   - name: manifestRef
     type: string
     required: false

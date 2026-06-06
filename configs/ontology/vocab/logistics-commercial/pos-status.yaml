@@ -1,0 +1,9 @@
+# TTK / pos operational status vocabulary (semantic SSOT)
+vocabId: pos-status
+domain: logistics
+values:
+  - onactualpoint
+  - ondispatch
+  - receivedtoconsignee
+  - cancelled
+  - intransit

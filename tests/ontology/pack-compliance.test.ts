@@ -54,6 +54,10 @@ describe("foundation ontology pack", () => {
       "RoutingDecision",
       "Location",
       "ServiceAreaCoverage",
+      "PickupRequest",
+      "Evidence",
+      "RegionalOffice",
+      "Project",
     ]) {
       assert.ok(resolved.entityTypes.includes(p1), `missing P1 type ${p1}`);
       assert.ok(resolved.models.has(p1), `missing P1 model ${p1}`);
@@ -61,6 +65,8 @@ describe("foundation ontology pack", () => {
     assert.ok(resolved.models.has("Shipment"));
     assert.ok(resolved.models.has("Opportunity"));
     assert.ok(resolved.junctions.has("ShipmentLeg"));
+    assert.ok(resolved.junctions.has("PickupShipment"));
+    assert.ok(resolved.junctions.has("DispatchShipment"));
     const leg = resolved.junctions.get("ShipmentLeg")!;
     const ok = leg.validateMembership({
       junctionType: "ShipmentLeg",
@@ -70,6 +76,32 @@ describe("foundation ontology pack", () => {
       rightEntityType: "Manifest",
     });
     assert.equal(ok.valid, true);
+    const pickupLeg = resolved.junctions.get("PickupShipment")!;
+    const pickupOk = pickupLeg.validateMembership({
+      junctionType: "PickupShipment",
+      leftEntityId: "pr1",
+      rightEntityId: "s2",
+      leftEntityType: "PickupRequest",
+      rightEntityType: "Shipment",
+    });
+    assert.equal(pickupOk.valid, true);
+    const dispatchLeg = resolved.junctions.get("DispatchShipment")!;
+    const dispatchOk = dispatchLeg.validateMembership({
+      junctionType: "DispatchShipment",
+      leftEntityId: "d1",
+      rightEntityId: "t1",
+      leftEntityType: "Dispatch",
+      rightEntityType: "TTK",
+    });
+    assert.equal(dispatchOk.valid, true);
+    const ttk = resolved.models.get("TTK")!;
+    const ttkGood = ttk.validate({
+      displayName: "TTK-001",
+      noTtk: "ABC-JKT-001",
+      chargeableWeight: 12.5,
+      shipmentRef: "s2",
+    });
+    assert.equal(ttkGood.valid, true);
   });
 
   it("merges aml-compliance extension when domain declares extensionPack", () => {
