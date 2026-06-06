@@ -197,6 +197,33 @@ describe("DaemonClient", () => {
     assert.equal(h["x-session-id"], "sess-1");
   });
 
+  it("shadowPricingSimulate posts to products route", async () => {
+    let url = "";
+    let body = "";
+    const client = new DaemonClient({
+      baseUrl: "http://example.test",
+      fetch: async (input, options) => {
+        url = String(input);
+        body = String(options?.body ?? "");
+        return jsonResponse({
+          mode: "ontology-only",
+          generatedAt: "2020-01-01T00:00:00.000Z",
+          routingDecisions: { count: 0, items: [] },
+          shipments: { count: 1, items: [{ entityId: "s1" }] },
+          readOnly: true,
+        });
+      },
+    });
+    const result = await client.shadowPricingSimulate({
+      ontologyId: "foundation",
+      shipmentRef: "SHP-ABC-001",
+    });
+    assert.match(url, /\/v1\/products\/shadow-pricing\/simulate$/);
+    assert.match(body, /SHP-ABC-001/);
+    assert.equal(result.readOnly, true);
+    assert.equal(result.shipments.count, 1);
+  });
+
   it("sends tenant and domain headers when configured", async () => {
     let headers: HeadersInit | undefined;
     const client = new DaemonClient({

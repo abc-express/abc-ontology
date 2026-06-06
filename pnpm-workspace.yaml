@@ -16,3 +16,4 @@ packages:
   - "api/rest"
   - "api/grpc"
   - "api/websocket"
+  - "integrations/antero-platform"

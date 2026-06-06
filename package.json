@@ -23,6 +23,8 @@
     "check:openapi-gateway-parity": "node scripts/check-openapi-gateway-parity.mjs",
     "check:parity-matrix": "node scripts/check-parity-matrix.mjs",
     "staging:smoke": "node scripts/staging-smoke.mjs",
+    "staging:bootstrap-abc": "node scripts/bootstrap-abc-staging.mjs",
+    "staging:consumer-smoke": "node scripts/antero-consumer-smoke.mjs",
     "codegen:pack": "node scripts/generate-pack-sdk.mjs",
     "codegen:check": "node scripts/codegen-check.mjs",
     "db:migrate": "pnpm run build --filter @daemon/data-platform && DAEMON_POSTGRES_URL=${DAEMON_POSTGRES_URL:-postgresql://daemon:daemon@127.0.0.1:5432/daemon} node --import tsx data-platform/migrations/run-migrations.ts",

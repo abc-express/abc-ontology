@@ -24,6 +24,8 @@ import type {
   PolicyDecision,
   QueryAskRequest,
   SearchResponse,
+  ShadowPricingSimulationRequest,
+  ShadowPricingSimulationResult,
   WriteReceipt,
 } from "./types.js";
 
@@ -161,6 +163,14 @@ export class DaemonClient {
     return this.requestSse("POST", "/v1/query/ask/stream", {
       body: JSON.stringify(body),
       onEvent,
+    });
+  }
+
+  async shadowPricingSimulate(
+    body: ShadowPricingSimulationRequest,
+  ): Promise<ShadowPricingSimulationResult> {
+    return this.request("POST", "/v1/products/shadow-pricing/simulate", {
+      body: JSON.stringify(body),
     });
   }
 

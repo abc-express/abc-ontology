@@ -198,4 +198,36 @@ export interface AutomationsApproveRequest {
   approvals: string[];
 }
 
+export interface ShadowPricingSimulationRequest {
+  ontologyId?: string;
+  shipmentRef?: string;
+  limit?: number;
+}
+
+export interface ClickHouseStatusRow {
+  status: string;
+  count: number;
+}
+
+export interface ShadowPricingSimulationResult {
+  mode: "clickhouse" | "ontology-only";
+  generatedAt: string;
+  shipmentRef?: string;
+  clickhouse?: {
+    database: string;
+    table: string;
+    statusBreakdown: ClickHouseStatusRow[];
+    totalRows: number;
+  };
+  routingDecisions: {
+    count: number;
+    items: { entityId: string; decisionType?: string; shipmentRef?: string }[];
+  };
+  shipments: {
+    count: number;
+    items: { entityId: string; externalRef?: string; displayName?: string }[];
+  };
+  readOnly: true;
+}
+
 export type { PolicyDecision };
