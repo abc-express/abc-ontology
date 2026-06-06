@@ -1,19 +1,10 @@
-entityType: Contact
+entityType: RegionalOffice
 fields:
   - name: displayName
     type: string
     required: true
-  - name: accountRef
+  - name: code
     type: string
-    required: false
-  - name: phone
-    type: string
-    required: false
-  - name: cityRef
-    type: string
-    required: false
-  - name: isCompany
-    type: boolean
     required: false
   - name: status
     type: string

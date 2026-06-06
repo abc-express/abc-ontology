@@ -4,7 +4,7 @@
   "ontologyId": "foundation",
   "entityCounts": {
     "Shipment": 2,
-    "Manifest": 2,
+    "Manifest": 3,
     "Dispatch": 1,
     "Trip": 1,
     "TTK": 1,
@@ -14,13 +14,20 @@
     "Lead": 1,
     "Opportunity": 1,
     "Pipeline": 1,
-    "Signal": 1
+    "Signal": 1,
+    "Location": 4,
+    "ServiceAreaCoverage": 2,
+    "PickupRequest": 1,
+    "RegionalOffice": 1,
+    "Evidence": 1,
+    "Project": 1
   },
   "sampleEntities": {
     "Shipment": {
       "externalRef": "SHP-ABC-001",
       "displayName": "Route Jakarta–Surabaya",
-      "status": "open"
+      "status": "open",
+      "noTtk": "TTK-ABC-001"
     }
   }
 }

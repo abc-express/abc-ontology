@@ -1,0 +1,26 @@
+entityType: Evidence
+fields:
+  - name: evidenceContext
+    type: string
+    required: true
+  - name: conditionStatus
+    type: string
+    required: false
+  - name: entityTypeRef
+    type: string
+    required: true
+  - name: entityIdRef
+    type: string
+    required: true
+  - name: ttkRef
+    type: string
+    required: false
+  - name: noTtk
+    type: string
+    required: false
+  - name: latitude
+    type: number
+    required: false
+  - name: longitude
+    type: number
+    required: false

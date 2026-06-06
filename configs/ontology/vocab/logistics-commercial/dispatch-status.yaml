@@ -1,0 +1,8 @@
+# Dispatch lifecycle vocabulary
+vocabId: dispatch-status
+domain: logistics
+values:
+  - prepare
+  - waiting
+  - ontheway
+  - finished

@@ -71,6 +71,12 @@ rules:
       - Manifest
       - Dispatch
       - RoutingDecision
+      - Location
+      - ServiceAreaCoverage
+      - PickupRequest
+      - Evidence
+      - RegionalOffice
+      - Project
     propagate:
       - read-model-projection
       - neo4j-graph-sync
@@ -93,6 +99,12 @@ rules:
       - Manifest
       - Dispatch
       - RoutingDecision
+      - Location
+      - ServiceAreaCoverage
+      - PickupRequest
+      - Evidence
+      - RegionalOffice
+      - Project
     propagate:
       - read-model-projection
       - audit-loop

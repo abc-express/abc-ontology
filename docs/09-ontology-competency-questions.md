@@ -36,7 +36,7 @@ Requires extension pack `logistics-commercial` merged for the caller's domain. U
 | LQ-02 | What **Contacts** reference account `{accountId}`? | `Account` → `LINK` → `Contact` (or property filter on `accountRef`) |
 | LQ-03 | What **Shipments** belong to order `{orderId}`? | `Order` → `LINK` → `Shipment` or `orderRef` on `Shipment` |
 | LQ-04 | Which **Manifest** rows connect to shipment `{shipmentId}`? | `Shipment` ↔ `Manifest` via `LINK` or shared junction membership in properties |
-| LQ-05 | What **TTK** documents reference shipment `{shipmentId}`? | `Shipment` → `LINK` → `TTK` |
+| LQ-05 | What **TTK** document belongs to shipment `{shipmentId}`? | `Shipment` → `LINK` → `TTK` (exactly one per OM Bab 5) |
 | LQ-06 | List shipments with status `{status}` | Filter `Shipment` by `status` |
 | LQ-07 | How many links does shipment `{shipmentId}` have? | Count `LINK` from `Shipment` |
 
@@ -47,7 +47,7 @@ Requires extension pack `logistics-commercial` merged for the caller's domain. U
 | LQ-08 | Which **Opportunity** records reference account `{accountId}`? | `Opportunity` with `accountRef` or `LINK` → `Account` |
 | LQ-09 | What **Conversation** rows tie to account `{accountId}`? | `Conversation` with `accountRef` or `LINK` → `Account` |
 
-## Logistics-commercial extension (domain `logistics`, P1 — pack v0.2.0)
+## Logistics-commercial extension (domain `logistics`, P1 — pack v0.2.0+)
 
 | ID | Question (natural language) | Expected graph pattern |
 |----|----------------------------|------------------------|
@@ -60,17 +60,29 @@ Requires extension pack `logistics-commercial` merged for the caller's domain. U
 | LQ-16 | What **Dispatch** rows reference manifest `{manifestId}`? | `Dispatch` with `manifestRef` or `LINK` → `Manifest` |
 | LQ-17 | List **RoutingDecision** rows for shipment `{shipmentId}` | `RoutingDecision` with `shipmentRef` |
 
+## Logistics-commercial extension (domain `logistics`, v0.3.0 — Antero alignment)
+
+| ID | Question (natural language) | Expected graph pattern |
+|----|----------------------------|------------------------|
+| LQ-18 | What **Evidence** rows exist for TTK `{noTtk}` across manifest and POD contexts? | `TTK` → `LINK` → `Evidence` or filter `ttkRef` / `noTtk` |
+| LQ-19 | What **Shipments** (and their TTKs) link to pickup request `{pickupId}`? | `PickupRequest` ↔ `Shipment` via `PickupShipment`; each Shipment → one `TTK` |
+| LQ-20 | Which **Manifest** rows belong to trip `{tripCode}`? | `Trip` with `tripCode` → `Manifest` via `tripRef` |
+| LQ-21 | Which **RegionalOffice** is the selling RO for TTK `{ttkId}`? | `TTK.sellingRoRef` → `RegionalOffice` or `LINK` |
+| LQ-22 | Which **Project** contains TTK `{ttkId}`? | `TTK.projectRef` → `Project` or `LINK` |
+
 Pack resolution supports `packBranch` / `environment` query params on `GET /v1/ontology/pack-resolution` (see [17-platform-decision-map.md](./17-platform-decision-map.md)).
 
 ### Negative competency (logistics domain, v1)
 
 Do **not** claim answers (return empty or explain out-of-scope) for:
 
-- TP-engine pricing outputs, shadow-before-go-live rating, chargeable-weight on **ShipmentLeg**
+- TP-engine pricing outputs, shadow-before-go-live rating, **`allocatedVendorCost`** / NLM dollar amounts on ShipmentLeg or Shipment
+- **Vendor** entity rates (deferred — `vendorRef` string only on Trip)
 - Financial journal entries, cost-center profitability, Layer 6+ people/performance entities
+- Accurate sync, Sartrans pool payloads, Installer module entities
 - Live operational KPIs (uptime %, adoption) — remain in downstream operational SSOT
 
-Operational execution state and ANTERO decision factory outputs are not replaced by NL query; DAEMON holds semantic registration and read projection only.
+Operational execution state and downstream operational decision outputs are not replaced by NL query; DAEMON holds semantic registration and read projection only.
 
 ## Few-shot examples (for LLM prompts)
 

@@ -1,20 +1,20 @@
-entityType: RoutingDecision
+entityType: PickupRequest
 fields:
-  - name: decisionType
+  - name: code
     type: string
     required: true
-  - name: decisionMethod
+  - name: status
     type: string
     required: false
-  - name: selectedPath
+  - name: officeRef
     type: string
     required: false
-  - name: selectionRationale
+  - name: shipperRef
     type: string
     required: false
-  - name: shipmentRef
+  - name: pickupSchedule
     type: string
     required: false
-  - name: decidedAt
+  - name: externalRef
     type: string
     required: false

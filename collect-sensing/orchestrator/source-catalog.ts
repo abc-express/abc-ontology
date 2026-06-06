@@ -29,6 +29,8 @@ export interface HttpPullConnectorConfig {
 export interface PostgresReadConnectorConfig {
   readonly type: "postgres-read";
   readonly sql: string;
+  /** Env var name holding the upstream Postgres URL (secrets stay out of YAML). */
+  readonly connectionEnv?: string;
   readonly params?: ReadonlyArray<unknown>;
   readonly recordIdColumn?: string;
 }
@@ -151,9 +153,14 @@ function parseConnector(raw: unknown, sourceId: string): SourceConnectorConfig {
     if (typeof sql !== "string" || !sql.trim()) {
       throw new Error(`source ${sourceId}: postgres-read requires sql`);
     }
+    const connectionEnv =
+      typeof obj.connectionEnv === "string" && obj.connectionEnv.trim()
+        ? obj.connectionEnv.trim()
+        : undefined;
     return {
       type: "postgres-read",
       sql: sql.trim(),
+      connectionEnv,
       params: Array.isArray(obj.params) ? obj.params : undefined,
       recordIdColumn:
         typeof obj.recordIdColumn === "string" ? obj.recordIdColumn : undefined,
@@ -359,6 +366,10 @@ export class SourceCatalog {
     const abcFixtures =
       process.env.DAEMON_ABC_FIXTURES === "1" ||
       process.env.DAEMON_ABC_FIXTURES === "true";
+    const abcLiveIngest =
+      (process.env.DAEMON_ABC_LIVE_INGEST === "1" ||
+        process.env.DAEMON_ABC_LIVE_INGEST === "true") &&
+      Boolean(process.env.ANTERO_SUPABASE_DB_URL?.trim());
     const sources = parsed.map((s) => {
       if (
         parityFixtures &&
@@ -367,6 +378,9 @@ export class SourceCatalog {
         return { ...s, enabled: true };
       }
       if (abcFixtures && s.id.startsWith("abc-fixture-")) {
+        return { ...s, enabled: true };
+      }
+      if (abcLiveIngest && s.id.startsWith("abc-antero-")) {
         return { ...s, enabled: true };
       }
       return s;

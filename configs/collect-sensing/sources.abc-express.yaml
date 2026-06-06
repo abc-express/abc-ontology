@@ -1,6 +1,6 @@
 # ABC Express shadow ingest — logistics-commercial on foundation ontology.
 # Set DAEMON_ABC_FIXTURES=1 to enable abc-fixture-* sources at runtime (CI / local parity).
-# Live Supabase/OBL sources stay disabled until credentials are configured.
+# Set DAEMON_ABC_LIVE_INGEST=1 and ANTERO_SUPABASE_DB_URL to enable abc-antero-* live shadow sources.
 sources:
   - id: abc-fixture-shipments
     enabled: false
@@ -19,6 +19,8 @@ sources:
         name: displayName
         status: status
         order_ref: orderRef
+        no_ttk: noTtk
+        chargeable_weight: chargeableWeight
       idField: externalRef
       meta:
         source: abc-fixture-shipments
@@ -101,6 +103,9 @@ sources:
         ttk_id: externalRef
         name: displayName
         status: status
+        no_ttk: noTtk
+        chargeable_weight: chargeableWeight
+        shipment_ref: shipmentRef
       idField: externalRef
       meta:
         source: abc-fixture-ttk
@@ -253,29 +258,6 @@ sources:
         source: abc-fixture-signals
         pack: logistics-commercial
 
-  - id: abc-supabase-read
-    enabled: false
-    scope:
-      tenantId: abc-antero
-      domainId: logistics
-    connector:
-      type: postgres-read
-      sql: |
-        SELECT id::text AS shipment_id, COALESCE(reference, id::text) AS name, status
-        FROM shipments
-        LIMIT 500
-    normalize:
-      ontologyId: foundation
-      entityType: Shipment
-      mapping:
-        shipment_id: externalRef
-        name: displayName
-        status: status
-      idField: externalRef
-      meta:
-        source: abc-supabase-read
-        pack: logistics-commercial
-
   - id: abc-fixture-obl-manifests
     enabled: false
     scope:
@@ -343,6 +325,393 @@ sources:
       idField: externalRef
       meta:
         source: abc-fixture-service-areas
+        pack: logistics-commercial
+
+  - id: abc-fixture-pickup-requests
+    enabled: false
+    scope:
+      tenantId: abc-antero
+      domainId: logistics
+    connector:
+      type: file
+      format: jsonl
+      path: tests/fixtures/abc-express/pickup-requests.jsonl
+    normalize:
+      ontologyId: foundation
+      entityType: PickupRequest
+      mapping:
+        pickup_id: externalRef
+        code: code
+        status: status
+        office_ref: officeRef
+      idField: externalRef
+      meta:
+        source: abc-fixture-pickup-requests
+        pack: logistics-commercial
+
+  - id: abc-fixture-regional-offices
+    enabled: false
+    scope:
+      tenantId: abc-antero
+      domainId: logistics
+    connector:
+      type: file
+      format: jsonl
+      path: tests/fixtures/abc-express/regional-offices.jsonl
+    normalize:
+      ontologyId: foundation
+      entityType: RegionalOffice
+      mapping:
+        office_id: externalRef
+        name: displayName
+        code: code
+        status: status
+      idField: externalRef
+      meta:
+        source: abc-fixture-regional-offices
+        pack: logistics-commercial
+
+  - id: abc-fixture-evidence
+    enabled: false
+    scope:
+      tenantId: abc-antero
+      domainId: logistics
+    connector:
+      type: file
+      format: jsonl
+      path: tests/fixtures/abc-express/evidence.jsonl
+    normalize:
+      ontologyId: foundation
+      entityType: Evidence
+      mapping:
+        entity_id_ref: entityIdRef
+        evidence_context: evidenceContext
+        entity_type_ref: entityTypeRef
+        condition_status: conditionStatus
+        no_ttk: noTtk
+      meta:
+        source: abc-fixture-evidence
+        pack: logistics-commercial
+
+  - id: abc-fixture-projects
+    enabled: false
+    scope:
+      tenantId: abc-antero
+      domainId: logistics
+    connector:
+      type: file
+      format: jsonl
+      path: tests/fixtures/abc-express/projects.jsonl
+    normalize:
+      ontologyId: foundation
+      entityType: Project
+      mapping:
+        project_id: externalRef
+        name: displayName
+        code: code
+        status: status
+        account_ref: accountRef
+      idField: externalRef
+      meta:
+        source: abc-fixture-projects
+        pack: logistics-commercial
+
+  - id: abc-antero-customer
+    enabled: false
+    scope:
+      tenantId: abc-antero
+      domainId: logistics
+    connector:
+      type: postgres-read
+      connectionEnv: ANTERO_SUPABASE_DB_URL
+      sql: |
+        SELECT id::text AS customer_id,
+               COALESCE(name, customer_code, id::text) AS name,
+               COALESCE(status, 'active') AS status
+        FROM customer
+        ORDER BY id
+        LIMIT 500
+    normalize:
+      ontologyId: foundation
+      entityType: Account
+      mapping:
+        customer_id: externalRef
+        name: displayName
+        status: status
+      idField: externalRef
+      meta:
+        source: abc-antero-customer
+        pack: logistics-commercial
+
+  - id: abc-antero-pos-ttk
+    enabled: false
+    scope:
+      tenantId: abc-antero
+      domainId: logistics
+    connector:
+      type: postgres-read
+      connectionEnv: ANTERO_SUPABASE_DB_URL
+      sql: |
+        SELECT id::text AS pos_id,
+               id::text AS shipment_ref,
+               COALESCE(no_ttk, id::text) AS no_ttk,
+               COALESCE(no_ttk, id::text) AS display_name,
+               COALESCE(status, 'unknown') AS status,
+               total_weight AS chargeable_weight
+        FROM pos
+        ORDER BY id
+        LIMIT 500
+      recordIdColumn: pos_id
+    normalize:
+      ontologyId: foundation
+      entityType: TTK
+      mapping:
+        pos_id: externalRef
+        no_ttk: noTtk
+        display_name: displayName
+        status: status
+        chargeable_weight: chargeableWeight
+        shipment_ref: shipmentRef
+      idField: externalRef
+      meta:
+        source: abc-antero-pos-ttk
+        pack: logistics-commercial
+
+  - id: abc-antero-pos-shipment
+    enabled: false
+    scope:
+      tenantId: abc-antero
+      domainId: logistics
+    connector:
+      type: postgres-read
+      connectionEnv: ANTERO_SUPABASE_DB_URL
+      sql: |
+        SELECT id::text AS pos_id,
+               COALESCE(resi_number, id::text) AS resi_number,
+               COALESCE(resi_number, id::text) AS display_name,
+               COALESCE(status, 'unknown') AS status,
+               total_weight AS chargeable_weight,
+               no_ttk AS no_ttk
+        FROM pos
+        ORDER BY id
+        LIMIT 500
+      recordIdColumn: pos_id
+    normalize:
+      ontologyId: foundation
+      entityType: Shipment
+      mapping:
+        pos_id: externalRef
+        display_name: displayName
+        status: status
+        chargeable_weight: chargeableWeight
+        no_ttk: noTtk
+      idField: externalRef
+      meta:
+        source: abc-antero-pos-shipment
+        pack: logistics-commercial
+
+  - id: abc-antero-manifest
+    enabled: false
+    scope:
+      tenantId: abc-antero
+      domainId: logistics
+    connector:
+      type: postgres-read
+      connectionEnv: ANTERO_SUPABASE_DB_URL
+      sql: |
+        SELECT id::text AS manifest_id,
+               COALESCE(code, id::text) AS code,
+               COALESCE(code, id::text) AS display_name,
+               COALESCE(status, 'unknown') AS status
+        FROM manifest
+        ORDER BY id
+        LIMIT 500
+      recordIdColumn: manifest_id
+    normalize:
+      ontologyId: foundation
+      entityType: Manifest
+      mapping:
+        manifest_id: externalRef
+        code: code
+        display_name: displayName
+        status: status
+      idField: externalRef
+      meta:
+        source: abc-antero-manifest
+        pack: logistics-commercial
+
+  - id: abc-antero-trip
+    enabled: false
+    scope:
+      tenantId: abc-antero
+      domainId: logistics
+    connector:
+      type: postgres-read
+      connectionEnv: ANTERO_SUPABASE_DB_URL
+      sql: |
+        SELECT id::text AS trip_id,
+               COALESCE(code, id::text) AS code,
+               COALESCE(status, 'unknown') AS status
+        FROM trip
+        ORDER BY id
+        LIMIT 500
+      recordIdColumn: trip_id
+    normalize:
+      ontologyId: foundation
+      entityType: Trip
+      mapping:
+        trip_id: externalRef
+        code: tripCode
+        status: status
+      idField: tripCode
+      meta:
+        source: abc-antero-trip
+        pack: logistics-commercial
+
+  - id: abc-antero-dispatch
+    enabled: false
+    scope:
+      tenantId: abc-antero
+      domainId: logistics
+    connector:
+      type: postgres-read
+      connectionEnv: ANTERO_SUPABASE_DB_URL
+      sql: |
+        SELECT id::text AS dispatch_id,
+               COALESCE(code, id::text) AS code,
+               COALESCE(code, id::text) AS display_name,
+               COALESCE(status, 'unknown') AS status
+        FROM dispatch
+        ORDER BY id
+        LIMIT 500
+      recordIdColumn: dispatch_id
+    normalize:
+      ontologyId: foundation
+      entityType: Dispatch
+      mapping:
+        dispatch_id: externalRef
+        code: code
+        display_name: displayName
+        status: status
+      idField: externalRef
+      meta:
+        source: abc-antero-dispatch
+        pack: logistics-commercial
+
+  - id: abc-antero-kantor
+    enabled: false
+    scope:
+      tenantId: abc-antero
+      domainId: logistics
+    connector:
+      type: postgres-read
+      connectionEnv: ANTERO_SUPABASE_DB_URL
+      sql: |
+        SELECT id::text AS office_id,
+               COALESCE(name, code, id::text) AS name,
+               code AS code,
+               COALESCE(status, 'active') AS status
+        FROM kantor
+        ORDER BY id
+        LIMIT 500
+      recordIdColumn: office_id
+    normalize:
+      ontologyId: foundation
+      entityType: RegionalOffice
+      mapping:
+        office_id: externalRef
+        name: displayName
+        code: code
+        status: status
+      idField: externalRef
+      meta:
+        source: abc-antero-kantor
+        pack: logistics-commercial
+
+  - id: abc-antero-pickup-request
+    enabled: false
+    scope:
+      tenantId: abc-antero
+      domainId: logistics
+    connector:
+      type: postgres-read
+      connectionEnv: ANTERO_SUPABASE_DB_URL
+      sql: |
+        SELECT id::text AS pickup_id,
+               COALESCE(code, id::text) AS code,
+               COALESCE(status, 'unknown') AS status,
+               office_id::text AS office_ref
+        FROM pickup_request
+        ORDER BY id
+        LIMIT 500
+      recordIdColumn: pickup_id
+    normalize:
+      ontologyId: foundation
+      entityType: PickupRequest
+      mapping:
+        pickup_id: externalRef
+        code: code
+        status: status
+        office_ref: officeRef
+      idField: externalRef
+      meta:
+        source: abc-antero-pickup-request
+        pack: logistics-commercial
+
+  - id: abc-antero-city
+    enabled: false
+    scope:
+      tenantId: abc-antero
+      domainId: logistics
+    connector:
+      type: postgres-read
+      connectionEnv: ANTERO_SUPABASE_DB_URL
+      sql: |
+        SELECT id::text AS city_id,
+               COALESCE(name, code, id::text) AS name,
+               code AS kab_kota_code
+        FROM city
+        ORDER BY id
+        LIMIT 500
+      recordIdColumn: city_id
+    normalize:
+      ontologyId: foundation
+      entityType: Location
+      mapping:
+        city_id: externalRef
+        name: displayName
+        kab_kota_code: kabKotaCode
+      idField: externalRef
+      meta:
+        source: abc-antero-city
+        pack: logistics-commercial
+
+  - id: abc-antero-coverage
+    enabled: false
+    scope:
+      tenantId: abc-antero
+      domainId: logistics
+    connector:
+      type: postgres-read
+      connectionEnv: ANTERO_SUPABASE_DB_URL
+      sql: |
+        SELECT id::text AS coverage_id,
+               city_id::text AS location_id,
+               COALESCE(status, 'unknown') AS coverage_status
+        FROM kantor_coverage_kota
+        ORDER BY id
+        LIMIT 500
+      recordIdColumn: coverage_id
+    normalize:
+      ontologyId: foundation
+      entityType: ServiceAreaCoverage
+      mapping:
+        coverage_id: externalRef
+        location_id: locationRef
+        coverage_status: coverageStatus
+      idField: externalRef
+      meta:
+        source: abc-antero-coverage
         pack: logistics-commercial
 
   - id: abc-obl-v3

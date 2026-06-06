@@ -450,6 +450,108 @@ describe("gateway HTTP", () => {
     }
   });
 
+  it("ingests logistics-commercial v0.3 entities on logistics domain", async () => {
+    const logisticsKey = syntheticTestApiKey("logistics");
+    const { baseUrl, close } = await createGatewayTestApp({
+      DAEMON_INGEST_SKIP_UPSTREAM: "1",
+      DAEMON_AUTH_MODE: "dev",
+      DAEMON_API_KEYS: `${logisticsKey}:dev:logistics-pilot:admin`,
+    });
+    try {
+      const res = await fetch(`${baseUrl}/v1/ingest/records`, {
+        method: "POST",
+        headers: authHeaders(
+          {
+            "x-daemon-tenant": "logistics-pilot",
+            "x-daemon-domain": "logistics",
+          },
+          logisticsKey,
+        ),
+        body: JSON.stringify({
+          sourceId: "logistics-v03",
+          records: [
+            {
+              ontologyId: FOUNDATION,
+              entityId: "log-pickup-1",
+              entityType: "PickupRequest",
+              properties: {
+                code: "PU-001",
+                entityType: "PickupRequest",
+                status: "pending",
+              },
+            },
+            {
+              ontologyId: FOUNDATION,
+              entityId: "log-ship-v03",
+              entityType: "Shipment",
+              properties: {
+                displayName: "Shipment v03",
+                entityType: "Shipment",
+                pickupRequestRef: "log-pickup-1",
+                chargeableWeight: 10,
+              },
+            },
+            {
+              ontologyId: FOUNDATION,
+              entityId: "log-ttk-v03",
+              entityType: "TTK",
+              properties: {
+                displayName: "TTK v03",
+                entityType: "TTK",
+                noTtk: "ABC-001",
+                shipmentRef: "log-ship-v03",
+                chargeableWeight: 10,
+              },
+            },
+            {
+              ontologyId: FOUNDATION,
+              entityId: "log-evidence-1",
+              entityType: "Evidence",
+              properties: {
+                evidenceContext: "delivery_pod",
+                entityTypeRef: "TTK",
+                entityIdRef: "log-ttk-v03",
+                entityType: "Evidence",
+                ttkRef: "log-ttk-v03",
+              },
+            },
+            {
+              ontologyId: FOUNDATION,
+              entityId: "log-ro-jkt",
+              entityType: "RegionalOffice",
+              properties: {
+                displayName: "RO Jakarta",
+                entityType: "RegionalOffice",
+                code: "JKT",
+              },
+            },
+          ],
+        }),
+      });
+      assert.equal(res.status, 201);
+      const readTtk = await fetch(
+        `${baseUrl}/v1/read/entities/log-ttk-v03?ontologyId=${FOUNDATION}`,
+        {
+          headers: authHeaders(
+            {
+              "x-daemon-tenant": "logistics-pilot",
+              "x-daemon-domain": "logistics",
+            },
+            logisticsKey,
+          ),
+        },
+      );
+      assert.equal(readTtk.status, 200);
+      const body = (await readTtk.json()) as {
+        properties: { chargeableWeight: number; shipmentRef: string };
+      };
+      assert.equal(body.properties.chargeableWeight, 10);
+      assert.equal(body.properties.shipmentRef, "log-ship-v03");
+    } finally {
+      await close();
+    }
+  });
+
   it("rejects unknown entity type with 400", async () => {
     const { baseUrl, close } = await createGatewayTestApp({
       DAEMON_INGEST_SKIP_UPSTREAM: "1",

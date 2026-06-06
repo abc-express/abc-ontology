@@ -3,7 +3,25 @@ fields:
   - name: displayName
     type: string
     required: true
+  - name: code
+    type: string
+    required: false
   - name: status
+    type: string
+    required: false
+  - name: originOfficeRef
+    type: string
+    required: false
+  - name: destinationOfficeRef
+    type: string
+    required: false
+  - name: tripRef
+    type: string
+    required: false
+  - name: legNumber
+    type: number
+    required: false
+  - name: etd
     type: string
     required: false
   - name: externalRef

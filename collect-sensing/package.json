@@ -11,6 +11,8 @@
     "./orchestrator/source-catalog.js": "./dist/orchestrator/source-catalog.js",
     "./connectors/connector-factory": "./dist/connectors/connector-factory.js",
     "./connectors/connector-factory.js": "./dist/connectors/connector-factory.js",
+    "./connectors/query-executor-resolver": "./dist/connectors/query-executor-resolver.js",
+    "./connectors/query-executor-resolver.js": "./dist/connectors/query-executor-resolver.js",
     "./connectors/event-connectors/nats-subscription": "./dist/connectors/event-connectors/nats-subscription.js",
     "./connectors/event-connectors/nats-subscription.js": "./dist/connectors/event-connectors/nats-subscription.js",
     "./normalization/record-normalizer": "./dist/normalization/record-normalizer.js",

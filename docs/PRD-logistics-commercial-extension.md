@@ -179,6 +179,16 @@ flowchart TB
 - [x] Extension pack v0.2.0 includes P1 entities (Lead, Pipeline, Activity, AccountPlan, Signal, Trip, Dispatch, RoutingDecision).
 - [x] `logistics-commercial` validated in `pnpm run check:ontology-pack` alongside `aml-compliance`.
 
+### v0.3.0 milestone (Antero / OM v2.0.3 alignment)
+
+- [x] Pack semver `0.3.0` with enriched operational/commercial field models.
+- [x] New entities: `PickupRequest`, `Evidence`, `RegionalOffice`, `Project`.
+- [x] New junctions: `PickupShipment` (PickupRequest ↔ Shipment), `DispatchShipment` (Dispatch ↔ TTK).
+- [x] Commercial hierarchy per OM Bab 5: Shipment → TTK 1:1; multi-destination via N Shipments per PickupRequest.
+- [x] Controlled vocabularies under `configs/ontology/vocab/logistics-commercial/`.
+- [x] Competency LQ-18–LQ-22 and updated negative scope in [09](./09-ontology-competency-questions.md).
+- [ ] R3 federated read from operational SSOT (out of scope for v0.3).
+
 ### Public entity checklist (generic names)
 
 | Generic type | Category | v1 priority |

@@ -6,6 +6,15 @@ fields:
   - name: status
     type: string
     required: false
+  - name: tier
+    type: string
+    required: false
+  - name: accountOwnerRoRef
+    type: string
+    required: false
+  - name: legalityStatus
+    type: string
+    required: false
   - name: externalRef
     type: string
     required: false

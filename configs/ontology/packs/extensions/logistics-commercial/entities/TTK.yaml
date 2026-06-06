@@ -3,11 +3,47 @@ fields:
   - name: displayName
     type: string
     required: true
+  - name: noTtk
+    type: string
+    required: false
   - name: shipmentRef
     type: string
     required: false
   - name: status
     type: string
+    required: false
+  - name: chargeableWeight
+    type: number
+    required: false
+  - name: shipperRef
+    type: string
+    required: false
+  - name: consigneeRef
+    type: string
+    required: false
+  - name: billToRef
+    type: string
+    required: false
+  - name: officeRef
+    type: string
+    required: false
+  - name: sellingRoRef
+    type: string
+    required: false
+  - name: executingRoRef
+    type: string
+    required: false
+  - name: accountOwnerRoRef
+    type: string
+    required: false
+  - name: projectRef
+    type: string
+    required: false
+  - name: pickupRequestRef
+    type: string
+    required: false
+  - name: podCompliancePending
+    type: boolean
     required: false
   - name: externalRef
     type: string

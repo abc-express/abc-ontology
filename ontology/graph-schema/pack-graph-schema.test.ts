@@ -36,8 +36,12 @@ describe("pack-graph-schema", () => {
     assert.ok(schema.entityTypes.includes("Account"));
     assert.ok(schema.entityTypes.includes("Lead"));
     assert.ok(schema.entityTypes.includes("Trip"));
+    assert.ok(schema.entityTypes.includes("PickupRequest"));
+    assert.ok(schema.entityTypes.includes("RegionalOffice"));
     assert.ok(schema.promptSchemaSummary.includes("Shipment"));
     const shipment = schema.entities.find((e) => e.entityType === "Shipment");
     assert.ok(shipment?.fields.some((f) => f.name === "status"));
+    const ttk = schema.entities.find((e) => e.entityType === "TTK");
+    assert.ok(ttk?.fields.some((f) => f.name === "chargeableWeight"));
   });
 });

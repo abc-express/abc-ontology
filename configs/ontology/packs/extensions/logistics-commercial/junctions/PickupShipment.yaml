@@ -1,0 +1,4 @@
+junctionType: PickupShipment
+endpoints:
+  - PickupRequest
+  - Shipment

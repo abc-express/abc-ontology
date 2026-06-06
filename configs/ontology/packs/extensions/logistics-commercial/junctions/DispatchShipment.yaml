@@ -1,0 +1,4 @@
+junctionType: DispatchShipment
+endpoints:
+  - Dispatch
+  - TTK

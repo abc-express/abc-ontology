@@ -1,0 +1,9 @@
+# PickupRequest lifecycle vocabulary
+vocabId: pickup-status
+domain: logistics
+values:
+  - pending
+  - ontheway
+  - collected
+  - completed
+  - failed
